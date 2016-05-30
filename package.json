@@ -1,0 +1,37 @@
+{
+  "name": "exobot",
+  "version": "0.0.1",
+  "description": "a chatbox",
+  "main": "index.js",
+  "scripts": {
+    "test": "blueprints -t",
+    "build": "blueprints -p",
+    "watch": "blueprints -p -w"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/exoplay/exobot.git"
+  },
+  "keywords": [
+    "chatbot"
+  ],
+  "author": "Jack Lawson <ajacksified@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/exoplay/exobot/issues"
+  },
+  "homepage": "https://github.com/exoplay/exobot#readme",
+  "devDependencies": {
+    "@r/build": "git://github.com/ajacksified/node-build#0d63e40c4a1a6a0d8a354312f0b900ce5b095232",
+    "source-map-support": "^0.4.0",
+    "yargs": "^4.7.1"
+  },
+  "dependencies": {
+    "@r/build": "^0.6.2",
+    "babel-polyfill": "^6.9.1",
+    "eventemitter3": "^1.2.0",
+    "install": "^0.8.1",
+    "node-uuid": "^1.4.7",
+    "npm": "^3.9.3"
+  }
+}
