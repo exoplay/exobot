@@ -31,6 +31,14 @@ const message = new TextMessage({
 
 shell.receive(message);
 
+const hiMessage = new TextMessage({
+  adapter: shell.id,
+  text: 'hi',
+  user,
+});
+
+shell.receive(hiMessage);
+
 const helpmessage = new TextMessage({
   adapter: shell.id,
   text: 'exobot help',

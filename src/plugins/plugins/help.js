@@ -1,9 +1,13 @@
-import MessagePlugin from '../message';
+import ChatPlugin from '../chat';
 
-export default class HelpPlugin extends MessagePlugin {
-  regexp = /^help$/
+export default class HelpPlugin extends ChatPlugin {
+  constructor () {
+    super(...arguments);
 
-  respond () {
+    this.respond(/^help$/, this.help);
+  }
+
+  help () {
     return 'HELP!';
   }
 }
