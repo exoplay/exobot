@@ -42,7 +42,7 @@ export default class DiscordAdapter extends Adapter {
     });
   }
 
-  respond (message) {
+  send (message) {
     this.bot.log.info(`Sending ${message.text} to ${message.channel}`);
 
     this.client.sendMessage({
@@ -66,15 +66,17 @@ export default class DiscordAdapter extends Adapter {
     this.bot.log.critical('Disconnected from Discord.');
   }
 
-  message (username, userId, channel, text, rawEvent) {
-    if (username !== this.username) {
-      if (this.client.directMessages[channel]) {
-        return this.whisper(username, userId, channel, text, rawEvent);
-      }
+  message (username, userId, channel, text/*, rawEvent*/) {
+    if (username === this.username) { return; }
 
-      const user = new User(username, userId);
-      this.receive({ user, text, channel });
+    const user = new User(username, userId);
+
+    // if it's a whisper, the channel is in directMessages
+    if (this.client.directMessages[channel]) {
+      return super.receiveWhisper({ user, text, channel });
     }
+
+    this.receive({ user, text, channel });
   }
 
   presence (username, userId, status, gameName, rawEvent) {
@@ -86,22 +88,6 @@ export default class DiscordAdapter extends Adapter {
       } else if (status === 'offline') {
         return super.leave({ user, channel: rawEvent.d.channel_id });
       }
-    }
-  }
-
-  whisper (username, userId, channel, text) {
-    this.bot.log.info(`Received whisper from ${username}: ${text}`);
-
-    if (username !== this.username) {
-      const user = new User(username, userId);
-
-      const botname = this.bot.name;
-
-      if (text.slice(0, botname.length).toLowerCase() !== botname.toLowerCase()) {
-        text = `${this.bot.name} ${text}`;
-      }
-
-      super.receive({ user, text, channel});
     }
   }
 }

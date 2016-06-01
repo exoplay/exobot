@@ -1,7 +1,7 @@
 import { v4 as uuid } from 'node-uuid';
 
 import TextMessage from '../messages/text';
-import PresenceMessage from '../messages/text';
+import PresenceMessage from '../messages/presence';
 
 export default class adapter {
   constructor (options={}) {
@@ -18,12 +18,17 @@ export default class adapter {
 
   listen () {
     if (!this.bot) { throw new Error('No bot to listen on; fatal.'); }
-    this.bot.on(`send-message:${this.id}`, this.respond.bind(this));
+    this.bot.on(`send-message:${this.id}`, this.send.bind(this));
   }
 
   receive ({ user, text, channel }) {
     const message = new TextMessage({ user, text, channel, adapter: this.id });
     this.bot.emit('receive-message', message);
+  }
+
+  receiveWhisper ({ user, text, channel }) {
+    text = this.bot.prependNameForWhisper(text);
+    this.receive({ user, text, channel });
   }
 
   enter ({ user, channel }) {
@@ -48,7 +53,7 @@ export default class adapter {
     this.bot.emit('receive-message', message);
   }
 
-  respond (message) {
+  send (message) {
     console.log(message.text);
   }
 }

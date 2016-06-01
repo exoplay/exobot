@@ -7,12 +7,6 @@ const GREETINGS = [
   'greetings',
   'yo',
   'hey',
-  'good morning',
-  'morning',
-  'good afternoon',
-  'afternoon',
-  'good evening',
-  'evening',
 ];
 
 const FAREWELLS = [
@@ -22,7 +16,6 @@ const FAREWELLS = [
   'later',
   'see ya',
   'cya',
-  'good night',
 ];
 
 const regex = (botname, list) => new RegExp(`^(${list.join('|')})[,\\s]*${botname}`, 'i');

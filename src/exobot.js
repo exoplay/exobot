@@ -47,9 +47,17 @@ export class Exobot {
     this.plugins.push(plugin);
   }
 
-  addAdapter(adapter) {
+  addAdapter (adapter) {
     adapter.register(this);
     this.adapters[adapter.id] = adapter;
+  }
+
+  prependNameForWhisper (text) {
+    if (text.slice(0, this.name.length).toLowerCase() !== this.name.toLowerCase()) {
+      text = `${this.name} ${text}`;
+    }
+
+    return text;
   }
 }
 
