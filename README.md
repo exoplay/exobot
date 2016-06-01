@@ -9,49 +9,38 @@ An ES6+ chatbot. Requires Node ^6.2.
 ## A Brief Example
 
 ```javascript
-// index.js
-const { Exobot, adapters, plugins, TextMessage, User } = require('../exobot');
-const { Logger, Help, Greetings } = plugins;
+const Log = require('log');
+
+const { Exobot, adapters, plugins } = require('../exobot');
+const { Help, Greetings } = plugins;
 
 const BOT_ALIAS = '!e';
 const BOT_NAME = 'exobot';
 const HTTP_LISTENER_PORT = process.env.PORT || '8080';
-const LOG_LEVEL = process.env.EXOBOT_LOG_LEVEL || Logger.levels.DEBUG;
+const LOG_LEVEL = process.env.EXOBOT_LOG_LEVEL || Log.INFO;
 
-const shell = new adapters.Shell();
+const shell = adapters.Shell;
 
 const bot = new Exobot(BOT_NAME, {
   alias: BOT_ALIAS,
   adapters: [
-    shell,
+    new shell(),
   ],
   plugins: [
-    new Logger({ level: LOG_LEVEL }),
     new Help(),
     new Greetings(),
   ],
   port: HTTP_LISTENER_PORT,
+  logLevel: LOG_LEVEL,
 });
+
+module.exports = bot;
 ```
 
 ```
 $ node index.js
-> Initializing bot...
-> Loading 'shell adapter'...
-> Loading scripts
-> * logger
-> * help
-> * greetings
-> * plusplus
-> * otherplugin
-> WARNING: No database plugins found, "plusplus" data will be lost!
-> HTTP server started on port 8080
-> Bot initialization complete.
->
-> hi, exobot
-> exobot: hello!
-> goodbye, exobot
-> exobot: bye, SHELL_USER
+> Chat: hi, exobot
+> exobot: hi, shell!
 ```
 
 
