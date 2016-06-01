@@ -1,4 +1,6 @@
 export default class Plugin {
+  help = undefined;
+
   constructor (options={}) {
     this.options = options;
   }
@@ -7,7 +9,6 @@ export default class Plugin {
     if (!bot) { throw new Error('No bot passed to register; fatal.'); }
 
     this.bot = bot;
-    this.listen();
   }
 
   listen () {

@@ -11,6 +11,8 @@ const GREETINGS = [
 const greetingRegex = botname => new RegExp(`^(${GREETINGS.join('|')})[,\\s]*${botname}`, 'i');
 
 export default class GreetingPlugin extends ChatPlugin {
+  help = 'Greetings: says "hi" back. Say "hi <botname>" for a response.';
+
   register (bot) {
     super.register(...arguments);
     this.listen(greetingRegex(bot.name), this.greeting);
