@@ -1,6 +1,7 @@
 import 'babel-polyfill';
 
 import Emitter from 'eventemitter3';
+import Log from 'log';
 
 const EMITTER_FUNCTIONS = [
   'on',
@@ -18,6 +19,7 @@ export class Exobot {
     this.name = name;
     this.alias = options.alias;
     this.emitter = new Emitter();
+    this.log = new Log(options.logLevel || Log.WARNING);
 
     EMITTER_FUNCTIONS.forEach(f => {
       this[f] = this.emitter[f];

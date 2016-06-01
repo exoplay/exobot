@@ -5,3 +5,4 @@ npm-debug.log
 start.sh
 bin/*
 build/
+example/

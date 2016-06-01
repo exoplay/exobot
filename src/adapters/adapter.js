@@ -3,7 +3,6 @@ import { v4 as uuid } from 'node-uuid';
 import TextMessage from '../messages/text';
 import PresenceMessage from '../messages/text';
 
-
 export default class adapter {
   constructor (options={}) {
     this.options = options;
@@ -19,7 +18,7 @@ export default class adapter {
 
   listen () {
     if (!this.bot) { throw new Error('No bot to listen on; fatal.'); }
-    this.bot.on(`send-message:${this.id}`, this.respond);
+    this.bot.on(`send-message:${this.id}`, this.respond.bind(this));
   }
 
   receive ({ user, text, channel }) {

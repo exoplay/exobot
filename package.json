@@ -29,9 +29,11 @@
   "dependencies": {
     "@r/build": "^0.6.2",
     "babel-polyfill": "^6.9.1",
+    "discord.io": "^1.11.1",
     "eventemitter3": "^1.2.0",
     "install": "^0.8.1",
     "node-uuid": "^1.4.7",
-    "npm": "^3.9.3"
+    "slack-client": "^2.0.6",
+    "tmi.js": "0.0.29"
   }
 }

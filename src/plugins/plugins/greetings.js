@@ -17,6 +17,7 @@ export default class GreetingPlugin extends ChatPlugin {
     super.register(...arguments);
     this.listen(greetingRegex(bot.name), this.greeting);
     this.listen((m) => GREETINGS.includes(m.text.toLowerCase()), this.greeting);
+    this.respond((m) => GREETINGS.includes(m.text.toLowerCase()), this.greeting);
   }
 
   greeting (message) {
