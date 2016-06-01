@@ -11,6 +11,7 @@ module.exports = [{
     },
     externals: {
       generator: 'node-modules',
+      additional: ['readline'],
     },
     resolve: {
       generator: 'npm-and-modules',

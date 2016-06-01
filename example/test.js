@@ -1,4 +1,4 @@
-const { Exobot, adapters, plugins, TextMessage, User } = require('../exobot');
+const { Exobot, adapters, plugins } = require('../exobot');
 const { Logger, Help, Greetings } = plugins;
 
 const BOT_ALIAS = '!e';
@@ -21,28 +21,4 @@ const bot = new Exobot(BOT_NAME, {
   port: HTTP_LISTENER_PORT,
 });
 
-const user = new User('jack');
-
-const message = new TextMessage({
-  adapter: shell.id,
-  text: 'hi, exobot!',
-  user,
-});
-
-shell.receive(message);
-
-const hiMessage = new TextMessage({
-  adapter: shell.id,
-  text: 'hi',
-  user,
-});
-
-shell.receive(hiMessage);
-
-const helpmessage = new TextMessage({
-  adapter: shell.id,
-  text: 'exobot help',
-  user,
-});
-
-shell.receive(helpmessage);
+module.exports = bot;
