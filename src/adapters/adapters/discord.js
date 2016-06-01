@@ -8,7 +8,7 @@ export const EVENTS = [
   'message',
   'presence',
   'disconnected',
-]
+];
 
 export default class DiscordAdapter extends Adapter {
   channels = {}
@@ -27,12 +27,12 @@ export default class DiscordAdapter extends Adapter {
     const { token, botId, username } = this;
 
     if (!token || !botId || !username) {
-      bot.log.critical('token, botId, and username are required to connect to discord.')
+      bot.log.critical('token, botId, and username are required to connect to discord.');
       return;
     }
 
     this.client = new Discord.Client({
-      token: token,
+      token,
       autorun: true,
     });
 
@@ -51,15 +51,15 @@ export default class DiscordAdapter extends Adapter {
     });
   }
 
-  ready (rawEvent) {
+  ready () {
     this.state = 'connected';
 
     this.bot.emit('connected', 'id', this.id);
     this.bot.log.info('Connected to Discord.');
 
     this.client.setPresence({
-      game: 'Exobotting'
-    })
+      game: 'Exobotting',
+    });
   }
 
   disconnected = () => {
@@ -67,24 +67,29 @@ export default class DiscordAdapter extends Adapter {
   }
 
   message (username, userId, channel, text, rawEvent) {
-    if (username != this.username) {
+    if (username !== this.username) {
       if (this.client.directMessages[channel]) {
         return this.whisper(username, userId, channel, text, rawEvent);
       }
 
       const user = new User(username, userId);
-      this.receive({ user, channel, text });
+      this.receive({ user, text, channel });
     }
   }
 
   presence (username, userId, status, gameName, rawEvent) {
-    if (userId != this.botId) {
+    if (userId !== this.botId) {
       const user = new User(username, userId);
-      super.enter({ user, channel });
+
+      if (status === 'online') {
+        return super.enter({ user, channel: rawEvent.d.channel_id });
+      } else if (status === 'offline') {
+        return super.leave({ user, channel: rawEvent.d.channel_id });
+      }
     }
   }
 
-  whisper (username, userId, channel, text, rawEvent) {
+  whisper (username, userId, channel, text) {
     this.bot.log.info(`Received whisper from ${username}: ${text}`);
 
     if (username !== this.username) {
@@ -92,8 +97,8 @@ export default class DiscordAdapter extends Adapter {
 
       const botname = this.bot.name;
 
-      if (text.slice(0, botname.length).toLowerCase() != botname.toLowerCase()) {
-        text = `${this.bot.name} ${text}`
+      if (text.slice(0, botname.length).toLowerCase() !== botname.toLowerCase()) {
+        text = `${this.bot.name} ${text}`;
       }
 
       super.receive({ user, text, channel});

@@ -32,6 +32,15 @@ export class Exobot {
     if (options.plugins) {
       options.plugins.forEach(p => this.addPlugin(p));
     }
+
+    if (options.logLevel === Log.INFO) {
+      setInterval(this.logProcess, 10000);
+    }
+  }
+
+  logProcess () {
+    this.log.info(process.memoryUsage());
+    this.log.info(process.cpuUsage());
   }
 
   addPlugin (plugin) {
