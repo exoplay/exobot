@@ -39,8 +39,7 @@ export class Exobot {
   }
 
   logProcess = () => {
-    this.log.info(process.memoryUsage());
-    this.log.info(process.cpuUsage());
+    this.log.debug(process.memoryUsage(), process.cpuUsage());
   }
 
   addPlugin (plugin) {
