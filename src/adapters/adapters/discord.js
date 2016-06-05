@@ -3,12 +3,12 @@ import User from '../../user';
 
 import Discord from 'discord.io';
 
-export const EVENTS = [
-  'ready',
-  'message',
-  'presence',
-  'disconnected',
-];
+export const EVENTS = {
+  ready: 'discordReady',
+  message: 'discordMessage',
+  presence: 'discordPresence',
+  disconnected: 'discordDisconnected',
+};
 
 export default class DiscordAdapter extends Adapter {
   channels = {}
@@ -36,9 +36,10 @@ export default class DiscordAdapter extends Adapter {
       autorun: true,
     });
 
-    EVENTS.forEach(e => {
-      this.client.on(e, (...args) => this[e](...args));
-      this.client.on(e, (...args) => this.bot.emit(`discord-${e}`, ...args));
+    Object.keys(EVENTS).forEach(discordEvent => {
+      const mappedFn = this[EVENTS[discordEvent]];
+      this.client.on(discordEvent, (...args) => mappedFn(...args));
+      this.client.on(discordEvent, (...args) => this.bot.emit(`discord-${discordEvent}`, ...args));
     });
   }
 
@@ -51,10 +52,10 @@ export default class DiscordAdapter extends Adapter {
     });
   }
 
-  ready () {
+  discordReady () {
     this.state = 'connected';
 
-    this.bot.emit('connected', 'id', this.id);
+    this.bot.emit('connected', this.id);
     this.bot.log.info('Connected to Discord.');
 
     this.client.setPresence({
@@ -62,11 +63,11 @@ export default class DiscordAdapter extends Adapter {
     });
   }
 
-  disconnected = () => {
+  discordDisconnected = () => {
     this.bot.log.critical('Disconnected from Discord.');
   }
 
-  message (username, userId, channel, text/*, rawEvent*/) {
+  discordMessage (username, userId, channel, text/*, rawEvent*/) {
     if (username === this.username) { return; }
 
     const user = new User(username, userId);
@@ -79,7 +80,7 @@ export default class DiscordAdapter extends Adapter {
     this.receive({ user, text, channel });
   }
 
-  presence (username, userId, status, gameName, rawEvent) {
+  discordPresence (username, userId, status, gameName, rawEvent) {
     if (userId !== this.botId) {
       const user = new User(username, userId);
 
