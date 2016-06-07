@@ -27,6 +27,7 @@ export default class DiscordAdapter extends Adapter {
     const { token, botId, username } = this;
 
     if (!token || !botId || !username) {
+      this.status = Adapter.STATUSES.ERROR;
       bot.log.critical('token, botId, and username are required to connect to discord.');
       return;
     }
@@ -53,7 +54,7 @@ export default class DiscordAdapter extends Adapter {
   }
 
   discordReady () {
-    this.state = 'connected';
+    this.status = Adapter.STATUSES.CONNECTED;
 
     this.bot.emit('connected', this.id);
     this.bot.log.info('Connected to Discord.');
@@ -64,6 +65,7 @@ export default class DiscordAdapter extends Adapter {
   }
 
   discordDisconnected = () => {
+    this.status = Adapter.STATUSES.DISCONNECTED;
     this.bot.log.critical('Disconnected from Discord.');
   }
 

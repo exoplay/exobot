@@ -53,7 +53,10 @@ export class Exobot {
   }
 
   prependNameForWhisper (text) {
-    if (text.slice(0, this.name.length).toLowerCase() !== this.name.toLowerCase()) {
+    if (
+      text.slice(0, this.name.length).toLowerCase() !== this.name.toLowerCase() &&
+      text.slice(0, this.alias.length).toLowerCase() !== this.alias.toLowerCase()
+    ) {
       text = `${this.name} ${text}`;
     }
 

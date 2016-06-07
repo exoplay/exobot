@@ -30,5 +30,6 @@ export default class ShellAdapter extends Adapter {
   register (bot) {
     super.register(bot);
     this.prompt();
+    this.status = Adapter.STATUS.CONNECTED;
   }
 }
