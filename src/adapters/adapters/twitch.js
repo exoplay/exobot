@@ -40,12 +40,12 @@ export default class TwitchAdapter extends Adapter {
     const { username, oauthPassword, channels } = this;
 
     if (!username || !oauthPassword) {
-      bot.log.critical('username and oauthPassword are required to connect to Twitch.');
+      bot.log.error('username and oauthPassword are required to connect to Twitch.');
       return;
     }
 
     if (!channels.length) {
-      bot.log.warning('No channels passed to Twitch adapter to connect to.');
+      bot.log.critical('No channels passed to Twitch adapter to connect to.');
     }
 
     this.client = new TMI.client({
@@ -79,7 +79,7 @@ export default class TwitchAdapter extends Adapter {
   }
 
   send (message) {
-    this.bot.log.info(`Sending ${message.text} to ${message.channel}`);
+    this.bot.log.debug(`Sending ${message.text} to ${message.channel}`);
 
     if (message.whisper) {
       return this.client.whisper(message.user.name, message.text);
@@ -95,12 +95,12 @@ export default class TwitchAdapter extends Adapter {
   twitchConnected = () => {
     this.status = Adapter.STATUS.CONNECTED;
     this.bot.emit('connected', this.id);
-    this.bot.log.info('Connected to Twitch.');
+    this.bot.log.notice('Connected to Twitch.');
   }
 
   twitchLogon = () => {
     this.status = Adapter.STATUS.CONNECTED;
-    this.bot.log.info('Successfully logged on to Twitch.');
+    this.bot.log.notice('Successfully logged on to Twitch.');
   }
 
   twitchDisconnected = () => {
@@ -110,7 +110,7 @@ export default class TwitchAdapter extends Adapter {
 
   twitchReconnect = () => {
     this.status = Adapter.STATUS.RECONNECTING;
-    this.bot.log.warning('Reconnecting to Twitch.');
+    this.bot.log.notice('Reconnecting to Twitch.');
   }
 
   twitchChat = (channel, twitchUser, text) => {
@@ -134,32 +134,8 @@ export default class TwitchAdapter extends Adapter {
     return this.leave({ user, channel });
   }
 
-  twitchMods = () => {
-  }
-
-  twitchNotice = () => {
-  }
-
   twitchPing = () => {
     this.ping();
-  }
-
-  twitchPong = () => {
-  }
-
-  twitchRoomstate = () => {
-  }
-
-  twitchSlowmode = () => {
-  }
-
-  twitchSubscribers = () => {
-  }
-
-  twitchSubscription = () => {
-  }
-
-  twitchTimeout = () => {
   }
 
   twitchWhisper = (twitchUser, text) => {
@@ -167,4 +143,21 @@ export default class TwitchAdapter extends Adapter {
     const user = new User(twitchUser.username);
     this.receiveWhisper({ user, text, channel: twitchUser.username });
   }
+
+  twitchPong = () => { }
+
+  twitchRoomstate = () => { }
+
+  twitchSlowmode = () => { }
+
+  twitchSubscribers = () => { }
+
+  twitchSubscription = () => { }
+
+  twitchTimeout = () => { }
+
+  twitchMods = () => { }
+
+  twitchNotice = () => { }
+
 }

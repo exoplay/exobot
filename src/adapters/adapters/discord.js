@@ -28,7 +28,7 @@ export default class DiscordAdapter extends Adapter {
 
     if (!token || !botId || !username) {
       this.status = Adapter.STATUSES.ERROR;
-      bot.log.critical('token, botId, and username are required to connect to discord.');
+      bot.log.error('token, botId, and username are required to connect to discord.');
       return;
     }
 
@@ -45,7 +45,7 @@ export default class DiscordAdapter extends Adapter {
   }
 
   send (message) {
-    this.bot.log.info(`Sending ${message.text} to ${message.channel}`);
+    this.bot.log.debug(`Sending ${message.text} to ${message.channel}`);
 
     this.client.sendMessage({
       to: message.channel,
@@ -57,7 +57,7 @@ export default class DiscordAdapter extends Adapter {
     this.status = Adapter.STATUSES.CONNECTED;
 
     this.bot.emit('connected', this.id);
-    this.bot.log.info('Connected to Discord.');
+    this.bot.log.notice('Connected to Discord.');
 
     this.client.setPresence({
       game: 'Exobotting',
