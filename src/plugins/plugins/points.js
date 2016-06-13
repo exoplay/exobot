@@ -14,8 +14,10 @@ export default class HelpPlugin extends ChatPlugin {
   constructor () {
     super(...arguments);
 
-    this.listen(/^([\s\w'@.\-:]*)\s*\+\+$/, this.addPoints);
+    this.listen(/^([\s\w'@.\-:]*)\s*\+\+(?:\s+for (.*))?$/, (match) => this.changePoints(match, 1));
+    this.listen(/^([\s\w'@.\-:]*)\s*\-\-(?:\s+for (.*))?$/, (match) => this.changePoints(match, -1));
     this.respond(/^tops$/, this.tops);
+    this.respond(/^score(?: for)?(.*)$/, this.score);
   }
 
   register (bot) {
@@ -23,7 +25,7 @@ export default class HelpPlugin extends ChatPlugin {
     this.database('points', { things: {}, tops: [] });
   }
 
-  async addPoints ([match, name]) {
+  async changePoints ([match, name, reason], val) {
     name = name.trim();
     const id = nameToId(name);
 
@@ -33,7 +35,15 @@ export default class HelpPlugin extends ChatPlugin {
 
     if (!points) { points = this.buildPoints(name, id); }
 
-    points.points++;
+    points.points = points.points + val;
+
+    if (reason) {
+      const reasonId = nameToId(reason);
+      const existingReason = points.reasons[reasonId] || { score: 0, reason: reason };
+      existingReason.score++;
+
+      points.reasons[reasonId] = existingReason;
+    }
 
     this.bot.db.set(`points.things.${id}`, points).value();
     this.bot.db.write();
@@ -46,12 +56,33 @@ export default class HelpPlugin extends ChatPlugin {
   async tops () {
     await this.databaseInitialized();
 
-    try {
     const scores = this.bot.db.get('points.things').value();
     const tops = this.bot.db.get('points.tops').slice(0,10).value();
 
     return tops.map(t => `${scores[t].name}: ${scores[t].points}`).join('\n');
-    } catch (e) { console.log(e); }
+  }
+
+  async score ([match, name]) {
+    name = name.trim();
+    const id = nameToId(name);
+
+    await this.databaseInitialized();
+
+    const points = this.bot.db.get(`points.things.${id}`).value();
+    const { reasons } = points;
+
+    const text = [`${name} has ${points.points} points.`];
+    const reasonKeys = Object.keys(points.reasons);
+
+    if (reasonKeys.length > 0) {
+      text.push('Here are some reasons:');
+
+      reasonKeys.forEach(r => {
+        text.push(`${reasons[r].reason}: ${reasons[r].score} points`);
+      });
+    }
+
+    return text.join('\n');
   }
 
   async updateTops() {
@@ -71,7 +102,7 @@ export default class HelpPlugin extends ChatPlugin {
       name,
       id,
       points: 0,
-      reasons: [],
+      reasons: {},
     };
   }
 }
