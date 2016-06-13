@@ -14,10 +14,10 @@ export default class HelpPlugin extends ChatPlugin {
   constructor () {
     super(...arguments);
 
-    this.listen(/^([\s\w'@.\-:]*)\s*\+\+(?:\s+for (.*))?$/, (match) => this.changePoints(match, 1));
-    this.listen(/^([\s\w'@.\-:]*)\s*\-\-(?:\s+for (.*))?$/, (match) => this.changePoints(match, -1));
-    this.respond(/^tops$/, this.tops);
-    this.respond(/^score(?: for)?(.*)$/, this.score);
+    this.listen(/^([\s\w'@.\-:]*)\s*\+\+(?:\s+for (.*))?$/i, (match) => this.changePoints(match, 1));
+    this.listen(/^([\s\w'@.\-:]*)\s*\-\-(?:\s+for (.*))?$/i, (match) => this.changePoints(match, -1));
+    this.respond(/^tops?\s*(\d*)?$/i, this.tops);
+    this.respond(/^score(?: for)?(.*)$/i, this.score);
   }
 
   register (bot) {
@@ -53,13 +53,19 @@ export default class HelpPlugin extends ChatPlugin {
     return `${name} has ${points.points} points.`;
   }
 
-  async tops () {
+  async tops ([match, n=10]) {
     await this.databaseInitialized();
 
-    const scores = this.bot.db.get('points.things').value();
-    const tops = this.bot.db.get('points.tops').slice(0,10).value();
+    if (n > 25) { n = 25; }
 
-    return tops.map(t => `${scores[t].name}: ${scores[t].points}`).join('\n');
+    const scores = this.bot.db.get('points.things').value();
+    const tops = this.bot.db.get('points.tops').slice(0,n).value();
+
+    let text = [`Top ${Math.min(n, tops.length)}:`];
+
+    tops.forEach(t => text.push(`${scores[t].name}: ${scores[t].points}`))
+
+    return text.join('\n');
   }
 
   async score ([match, name]) {

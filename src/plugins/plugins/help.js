@@ -5,7 +5,7 @@ export default class HelpPlugin extends ChatPlugin {
 
   constructor () {
     super(...arguments);
-    this.respond(/^help$/, this.pluginHelp);
+    this.respond(/^help$/i, this.pluginHelp);
   }
 
   pluginHelp = () => {

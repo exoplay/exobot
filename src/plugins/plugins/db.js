@@ -5,8 +5,8 @@ export default class DBPlugin extends ChatPlugin {
 
   constructor () {
     super(...arguments);
-    this.respond(/^db dump/, this.dump);
-    this.respond(/^db clear/, this.clear);
+    this.respond(/^db dump/i, this.dump);
+    this.respond(/^db clear/i, this.clear);
   }
 
   async dump () {
