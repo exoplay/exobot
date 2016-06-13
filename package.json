@@ -35,6 +35,7 @@
   },
   "dependencies": {
     "@r/build": "^0.6.2",
+    "@slack/client": "^3.4.0",
     "babel-polyfill": "^6.9.1",
     "cryptr": "^2.0.0",
     "eventemitter3": "^1.2.0",

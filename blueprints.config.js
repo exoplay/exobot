@@ -11,7 +11,7 @@ module.exports = [{
     },
     externals: {
       generator: 'node-modules',
-      additional: ['readline'],
+      additional: ['readline', '@slack/client'],
     },
     resolve: {
       generator: 'npm-and-modules',

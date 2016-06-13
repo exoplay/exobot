@@ -33,6 +33,7 @@ export class Exobot {
   initLog = (logLevel) => {
     const log = new Log(logLevel || Log.WARNING);
     this.log = log;
+    this.logLevel = logLevel;
 
     if (logLevel === Log.DEBUG) {
       setInterval(this.logProcess, 10000);

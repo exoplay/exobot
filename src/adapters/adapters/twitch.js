@@ -1,7 +1,7 @@
+import TMI from 'tmi.js';
+
 import Adapter from '../adapter';
 import User from '../../user';
-
-import TMI from 'tmi.js';
 
 export const EVENTS = {
   connecting: 'twitchConnecting',

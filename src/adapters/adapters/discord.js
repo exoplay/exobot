@@ -1,7 +1,7 @@
+import Discord from 'discord.io';
+
 import Adapter from '../adapter';
 import User from '../../user';
-
-import Discord from 'discord.io';
 
 export const EVENTS = {
   ready: 'discordReady',
@@ -27,7 +27,7 @@ export default class DiscordAdapter extends Adapter {
     const { token, botId, username } = this;
 
     if (!token || !botId || !username) {
-      this.status = Adapter.STATUSES.ERROR;
+      this.status = Adapter.STATUS.ERROR;
       bot.log.error('token, botId, and username are required to connect to discord.');
       return;
     }
@@ -55,8 +55,8 @@ export default class DiscordAdapter extends Adapter {
     });
   }
 
-  discordReady () {
-    this.status = Adapter.STATUSES.CONNECTED;
+  discordReady = () => {
+    this.status = Adapter.STATUS.CONNECTED;
 
     this.bot.emitter.emit('connected', this.id);
     this.bot.log.notice('Connected to Discord.');
@@ -67,7 +67,7 @@ export default class DiscordAdapter extends Adapter {
   }
 
   discordDisconnected = () => {
-    this.status = Adapter.STATUSES.DISCONNECTED;
+    this.status = Adapter.STATUS.DISCONNECTED;
     this.bot.log.critical('Disconnected from Discord.');
   }
 
