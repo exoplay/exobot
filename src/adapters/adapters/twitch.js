@@ -74,7 +74,9 @@ export default class TwitchAdapter extends Adapter {
     Object.keys(EVENTS).forEach(twitchEvent => {
       const mappedFn = this[EVENTS[twitchEvent]];
       this.client.on(twitchEvent, (...args) => mappedFn(...args));
-      this.client.on(twitchEvent, (...args) => this.bot.emit(`twitch-${twitchEvent}`, ...args));
+      this.client.on(twitchEvent, (...args) => {
+        this.bot.emitter.emit(`twitch-${twitchEvent}`, ...args);
+      });
     });
   }
 
@@ -94,7 +96,7 @@ export default class TwitchAdapter extends Adapter {
 
   twitchConnected = () => {
     this.status = Adapter.STATUS.CONNECTED;
-    this.bot.emit('connected', this.id);
+    this.bot.emitter.emit('connected', this.id);
     this.bot.log.notice('Connected to Twitch.');
   }
 

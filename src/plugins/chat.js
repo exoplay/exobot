@@ -17,9 +17,9 @@ export default class ChatPlugin extends Plugin {
     this.bot = bot;
     this.botNameRegex = new RegExp(`^(?:(?:${bot.name}|${bot.alias})[,\\s:.-]*)(.+)`);
 
-    bot.on('receive-message', m => {
-      this.respondFunctions.forEach((v) => this.process(v[0], v[1], m, true));
-      this.listenFunctions.forEach((v) => this.process(v[0], v[1], m));
+    bot.emitter.on('receive-message', m => {
+      this.respondFunctions.forEach(v => this.process(v[0], v[1], m, true));
+      this.listenFunctions.forEach(v => this.process(v[0], v[1], m));
     });
   }
 
@@ -36,12 +36,21 @@ export default class ChatPlugin extends Plugin {
 
     if (validation.exec) { validation = this.validate(validation); }
 
-    if (validation(message)) {
-      const text = response(message);
+    const res = validation(message);
+
+    if (res) {
+      const text = response(res, message);
 
       if (text) {
-        const newMessage = new TextMessage({ ...message, text });
-        this.bot.emit(`send-message:${message.adapter}`, newMessage);
+        if (text instanceof Promise) {
+          text.then(t => {
+            const newMessage = new TextMessage({ ...message, text: t });
+            this.bot.emitter.emit(`send-message:${message.adapter}`, newMessage);
+          });
+        } else {
+          const newMessage = new TextMessage({ ...message, text });
+          this.bot.emitter.emit(`send-message:${message.adapter}`, newMessage);
+        }
       }
     }
   }
@@ -58,10 +67,12 @@ export default class ChatPlugin extends Plugin {
   }
 
   respond (validation, fn) {
+    if (fn) { fn = fn.bind(this); }
     this.respondFunctions.push([validation, fn]);
   }
 
   listen (validation, fn) {
+    if (fn) { fn = fn.bind(this); }
     this.listenFunctions.push([validation, fn]);
   }
 }

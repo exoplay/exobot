@@ -35,12 +35,12 @@ export default class GreetingPlugin extends ChatPlugin {
     this.respond((m) => FAREWELLS.includes(m.text.toLowerCase()), this.farewell);
   }
 
-  greeting (message) {
+  greeting (_, message) {
     const randomGreeting = GREETINGS[parseInt(Math.random() * GREETINGS.length)];
     return `${randomGreeting}, ${message.user.name}!`;
   }
 
-  farewell (message) {
+  farewell (_, message) {
     const randomFarewell = FAREWELLS[parseInt(Math.random() * FAREWELLS.length)];
     return `${randomFarewell}, ${message.user.name}!`;
   }
