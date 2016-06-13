@@ -2,6 +2,12 @@ import 'babel-polyfill';
 
 import Emitter from 'eventemitter3';
 import Log from 'log';
+import superagent from 'superagent';
+import sapp from 'superagent-promise-plugin';
+sapp.Promise = Promise;
+
+const http = sapp.patch(superagent);
+
 
 import { DB } from './db';
 
@@ -13,6 +19,7 @@ export class Exobot {
     this.name = name;
     this.alias = options.alias;
     this.emitter = new Emitter();
+    this.http = http;
 
     this.initLog(options.logLevel || Log.WARNING);
     this.initAdapters(options.adapters);
