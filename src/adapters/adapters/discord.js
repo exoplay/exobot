@@ -40,7 +40,9 @@ export default class DiscordAdapter extends Adapter {
     Object.keys(EVENTS).forEach(discordEvent => {
       const mappedFn = this[EVENTS[discordEvent]];
       this.client.on(discordEvent, (...args) => mappedFn(...args));
-      this.client.on(discordEvent, (...args) => this.bot.emit(`discord-${discordEvent}`, ...args));
+      this.client.on(discordEvent, (...args) => {
+        this.bot.emitter.emit(`discord-${discordEvent}`, ...args);
+      });
     });
   }
 
@@ -56,7 +58,7 @@ export default class DiscordAdapter extends Adapter {
   discordReady () {
     this.status = Adapter.STATUSES.CONNECTED;
 
-    this.bot.emit('connected', this.id);
+    this.bot.emitter.emit('connected', this.id);
     this.bot.log.notice('Connected to Discord.');
 
     this.client.setPresence({

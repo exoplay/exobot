@@ -3,13 +3,7 @@ import 'babel-polyfill';
 import Emitter from 'eventemitter3';
 import Log from 'log';
 
-const EMITTER_FUNCTIONS = [
-  'on',
-  'once',
-  'emit',
-  'removeListener',
-  'listeners',
-];
+import { DB } from './db';
 
 export class Exobot {
   plugins = [];
@@ -19,23 +13,48 @@ export class Exobot {
     this.name = name;
     this.alias = options.alias;
     this.emitter = new Emitter();
-    this.log = new Log(options.logLevel || Log.WARNING);
 
-    EMITTER_FUNCTIONS.forEach(f => {
-      this[f] = this.emitter[f];
-    });
+    this.initLog(options.logLevel || Log.WARNING);
+    this.initAdapters(options.adapters);
+    this.initPlugins(options.plugins);
 
-    if (options.adapters) {
-      options.adapters.forEach(a => this.addAdapter(a));
-    }
+    const dbPath = options.dbPath || `./data/${name}.json`;
+    this.initDB(options.key, dbPath, options.readFile, options.writeFile);
+  }
 
-    if (options.plugins) {
-      options.plugins.forEach(p => this.addPlugin(p));
-    }
+  initAdapters = (adapters=[]) => {
+    adapters.forEach(a => this.addAdapter(a));
+  }
 
-    if (options.logLevel === Log.DEBUG) {
+  initPlugins = (plugins=[]) => {
+    plugins.forEach(p => this.addPlugin(p));
+  }
+
+  initLog = (logLevel) => {
+    const log = new Log(logLevel || Log.WARNING);
+    this.log = log;
+
+    if (logLevel === Log.DEBUG) {
       setInterval(this.logProcess, 10000);
     }
+  }
+
+  initDB = (key, dbPath, readFile, writeFile) => {
+    if (!key) {
+      this.log.critical('Pass options.key in to bot initializer. Database not initializing.');
+      return;
+    }
+
+    DB({
+      key,
+      readFile,
+      writeFile,
+      path: dbPath,
+      emitter: this.emitter,
+    }).then((db) => {
+      this.db = db;
+      this.emitter.emit('dbLoaded', db);
+    }, this.log.critical);
   }
 
   logProcess = () => {

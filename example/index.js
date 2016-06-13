@@ -1,7 +1,7 @@
 const Log = require('log');
 
 const { Exobot, adapters, plugins } = require('../exobot');
-const { Help, Greetings } = plugins;
+const { Help, Greetings, Points, DBDump } = plugins;
 
 const BOT_ALIAS = '!e';
 const BOT_NAME = 'exobot';
@@ -18,9 +18,12 @@ const bot = new Exobot(BOT_NAME, {
   plugins: [
     new Help(),
     new Greetings(),
+    new Points(),
+    new DBDump(),
   ],
   port: HTTP_LISTENER_PORT,
   logLevel: LOG_LEVEL,
+  key: 'bananasaurus',
 });
 
 module.exports = bot;

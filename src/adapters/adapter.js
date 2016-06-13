@@ -30,12 +30,12 @@ export default class Adapter {
 
   listen () {
     if (!this.bot) { throw new Error('No bot to listen on; fatal.'); }
-    this.bot.on(`send-message:${this.id}`, this.send.bind(this));
+    this.bot.emitter.on(`send-message:${this.id}`, this.send.bind(this));
   }
 
   receive ({ user, text, channel, whisper }) {
     const message = new TextMessage({ user, text, channel, whisper, adapter: this.id });
-    this.bot.emit('receive-message', message);
+    this.bot.emitter.emit('receive-message', message);
   }
 
   receiveWhisper ({ user, text, channel }) {
@@ -51,7 +51,7 @@ export default class Adapter {
       type: PresenceMessage.TYPES.ENTER,
     });
 
-    this.bot.emit('enter', message);
+    this.bot.emitter.emit('enter', message);
   }
 
   leave ({ user, channel }) {
@@ -62,7 +62,7 @@ export default class Adapter {
       type: PresenceMessage.TYPES.LEAVE,
     });
 
-    this.bot.emit('leave', message);
+    this.bot.emitter.emit('leave', message);
   }
 
   send (message) {
