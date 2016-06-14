@@ -22,9 +22,7 @@
   },
   "homepage": "https://github.com/exoplay/exobot#readme",
   "devDependencies": {
-    "@r/build": "git://github.com/ajacksified/node-build#0d63e40c4a1a6a0d8a354312f0b900ce5b095232",
-    "source-map-support": "^0.4.0",
-    "yargs": "^4.7.1"
+    "@r/build": "git://github.com/ajacksified/node-build#679c3f3d47c0916237d55128ece4cc817b489ef8"
   },
   "peerDependencies": {
     "discord.io": "^1.11.1",
