@@ -25,23 +25,21 @@
     "@r/build": "git://github.com/ajacksified/node-build#679c3f3d47c0916237d55128ece4cc817b489ef8"
   },
   "peerDependencies": {
-    "discord.io": "^1.11.1",
-    "@slack/client": "^2.0.6",
-    "lodash": "^4.13.1",
-    "lowdb": "^0.13.1",
-    "tmi.js": "0.0.29"
+    "discord.io": "~1.11.1",
+    "@slack/client": "~2.0.6",
+    "tmi.js": "~0.0.29"
   },
   "dependencies": {
-    "@r/build": "^0.6.2",
-    "babel-polyfill": "^6.9.1",
-    "cryptr": "^2.0.0",
-    "eventemitter3": "^1.2.0",
-    "fetch-ponyfill": "^1.0.0",
-    "fs-extra": "^0.30.0",
-    "install": "^0.8.1",
-    "node-uuid": "^1.4.7",
-    "superagent": "^2.0.0",
-    "superagent-promise-plugin": "^3.2.0",
-    "underscore-db": "^0.10.0"
+    "babel-polyfill": "~6.9.1",
+    "cryptr": "~2.0.0",
+    "eventemitter3": "~1.2.0",
+    "fetch-ponyfill": "~1.0.0",
+    "fs-extra": "~0.30.0",
+    "lodash": "~4.13.1",
+    "lowdb": "~0.13.1",
+    "node-uuid": "~1.4.7",
+    "superagent": "~2.0.0",
+    "superagent-promise-plugin": "~3.2.0",
+    "underscore-db": "~0.10.0"
   }
 }

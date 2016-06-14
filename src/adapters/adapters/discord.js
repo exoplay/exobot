@@ -39,7 +39,7 @@ export default class DiscordAdapter extends Adapter {
 
     Object.keys(EVENTS).forEach(discordEvent => {
       const mappedFn = this[EVENTS[discordEvent]];
-      this.client.on(discordEvent, (...args) => mappedFn(...args));
+      this.client.on(discordEvent, (...args) => mappedFn.bind(this)(...args));
       this.client.on(discordEvent, (...args) => {
         this.bot.emitter.emit(`discord-${discordEvent}`, ...args);
       });
