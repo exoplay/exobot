@@ -80,7 +80,14 @@ export default class Slack extends Adapter {
     if (message.user === botId) { return; }
 
     const slackUser = this.client.dataStore.getUserById(message.user);
-    const user = new User(slackUser.name, slackUser.id);
+    let user;
+
+    if (slackUser) {
+      user = new User(slackUser.name, slackUser.id);
+    } else {
+      user = new User(message.user);
+    }
+
     this.receive({ user, text: message.text, channel: message.channel });
   }
 }
