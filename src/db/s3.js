@@ -1,40 +1,73 @@
 import AWS from 'aws-sdk';
 
-export function readS3 (region, key, secret, bucket, filename, createBucket=false) {
+export function readS3 (region, accessKeyId, secretAccessKey, bucket, createBucket=false) {
   return async function (path) {
-    // yayyyy globals, thanks amazon
-    AWS.config.region = region;
+    try {
+      if (createBucket) {
+        await createS3Bucket(region, accessKeyId, secretAccessKey, bucket);
+      }
 
-    if (createBucket) {
-      await createS3Bucket(region, key, secret, bucket);
-    }
-
-    const bucket = new AWS.S3({ params: { Bucket: bucket, Key: key } });
-    bucket.
-  };
-}
-
-export function writeS3 (region, key, secret, bucket, filename, createBucket=false) {
-  return async function (path, data) {
-    AWS.config.region = region;
-
-    if (createBucket) {
-      await createS3Bucket(region, key, secret, bucket);
-    }
-
-    const bucket = new AWS.S3({ params: { Bucket: bucket, Key: key } });
-    return new Promise((resolve, reject) => {
-      bucket.upload({ Body: data }, (err, data) => {
-        if (err) { return reject(err); }
-        resolve(data);
+      const s3bucket = new AWS.S3({
+        region,
+        accessKeyId,
+        secretAccessKey,
+        params: {
+          Bucket: bucket,
+        },
       });
-    });
+
+      return new Promise((resolve, reject) => {
+        s3bucket.getObject({
+          Bucket: bucket,
+          Key: path,
+        }, (err, data) => {
+          if (err && err.statusCode === 404) { return resolve (''); }
+          if (err) { return reject(err); }
+          return resolve(data.Body.toString());
+        });
+      });
+    } catch (e) { console.log(e); }
   };
 }
 
-export async function createS3Bucket (region, key, secret, bucket) {
-  AWS.config.region = region;
+export function writeS3 (region, accessKeyId, secretAccessKey, bucket, createBucket=false) {
+  return async function (path, data) {
+    try {
+      if (createBucket) {
+        await createS3Bucket(region, accessKeyId, secretAccessKey, bucket);
+      }
 
-  const newBucket = new AWS.S3({ params: { Bucket: bucket, Key: key } });
-  return new Promise(resolve => newBucket.createBucket(resolve));
+      const s3bucket = new AWS.S3({
+        region,
+        accessKeyId,
+        secretAccessKey,
+        params: {
+          Bucket: bucket,
+          Key: path,
+        },
+      });
+
+      return new Promise((resolve, reject) => {
+        s3bucket.upload({ Body: data }, (err, data) => {
+          if (err) { return reject(err); }
+          resolve(data);
+        });
+      });
+    } catch(e) { console.log(e); }
+  };
+}
+
+export async function createS3Bucket (region, accessKeyId, secretAccessKey, bucket) {
+  try {
+    const newBucket = new AWS.S3({
+      region,
+      accessKeyId,
+      secretAccessKey,
+      params: {
+        Bucket: bucket,
+      },
+    });
+
+    return new Promise(resolve => newBucket.createBucket(resolve));
+  } catch(e) { console.log(e); }
 }

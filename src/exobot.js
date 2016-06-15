@@ -8,7 +8,6 @@ sapp.Promise = Promise;
 
 const http = sapp.patch(superagent);
 
-
 import { DB } from './db';
 
 export class Exobot {
@@ -94,4 +93,5 @@ export class Exobot {
 export * from './adapters';
 export * from './messages';
 export * from './plugins';
+export * from './db';
 export { default as User } from './user';
