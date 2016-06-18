@@ -5,8 +5,12 @@ import {
   //MemoryDataStore,
 } from '@slack/client';
 
+import models from '@slack/client/lib/models';
+
 import Adapter from '../adapter';
 import User from '../../user';
+
+const dmName = new models.DM()._modelName;
 
 export const EVENTS = {
   [CLIENT_EVENTS.RTM.CONNECTING]: 'slackConnecting',
@@ -86,6 +90,12 @@ export default class Slack extends Adapter {
       user = new User(slackUser.name, slackUser.id);
     } else {
       user = new User(message.user);
+    }
+
+    const channel = this.client.dataStore.getChannelGroupOrDMById(message.channel);
+
+    if (channel && channel._modelName === dmName) {
+      return this.receiveWhisper({ user, text: message.text, channel: message.channel });
     }
 
     this.receive({ user, text: message.text, channel: message.channel });

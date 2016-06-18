@@ -45,11 +45,11 @@ export default class ChatPlugin extends Plugin {
         if (text instanceof Promise) {
           text.then(t => {
             const newMessage = new TextMessage({ ...message, text: t });
-            this.bot.emitter.emit(`send-message:${message.adapter}`, newMessage);
+            this.bot.send(newMessage);
           });
         } else {
           const newMessage = new TextMessage({ ...message, text });
-          this.bot.emitter.emit(`send-message:${message.adapter}`, newMessage);
+          this.bot.send(newMessage);
         }
       }
     }

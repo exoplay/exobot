@@ -30,7 +30,6 @@ export default class Adapter {
 
   listen () {
     if (!this.bot) { throw new Error('No bot to listen on; fatal.'); }
-    this.bot.emitter.on(`send-message:${this.id}`, this.send.bind(this));
   }
 
   receive ({ user, text, channel, whisper }) {

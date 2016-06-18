@@ -88,6 +88,17 @@ export class Exobot {
 
     return text;
   }
+
+  send (message) {
+    const adapter = this.adapters[message.adapter];
+
+    if (!adapter) {
+      this.bot.log.warning(`Message sent with invalid adapter: ${message.adapter}`);
+      return;
+    }
+
+    adapter.send(message);
+  }
 }
 
 export * from './adapters';
