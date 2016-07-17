@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Exobot by exoplay</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Exobot</h1>
+      <h2 class="project-tagline">a chatbot</h2>
+      <a href="https://github.com/exoplay/exobot" class="btn">View on GitHub</a>
+      <a href="https://github.com/exoplay/exobot/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/exoplay/exobot/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <h1>
+<a id="exobot" class="anchor" href="#exobot" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Exobot</h1>
+
+<p>An ES6+ chatbot. Requires Node ^6.2.</p>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Installation</h2>
+
+<ul>
+<li><code>npm install --save @exoplay/exobot</code></li>
+</ul>
+
+<h2>
+<a id="a-brief-example" class="anchor" href="#a-brief-example" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>A Brief Example</h2>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">const</span> { <span class="pl-c1">Exobot</span>, <span class="pl-c1">adapters</span>, <span class="pl-c1">plugins</span> } <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>@exoplay/exobot<span class="pl-pds">'</span></span>);
+<span class="pl-k">const</span> { <span class="pl-c1">Help</span>, <span class="pl-c1">Greetings</span> } <span class="pl-k">=</span> plugins;
+
+<span class="pl-k">const</span> <span class="pl-c1">BOT_ALIAS</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>!e<span class="pl-pds">'</span></span>;
+<span class="pl-k">const</span> <span class="pl-c1">BOT_NAME</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>exobot<span class="pl-pds">'</span></span>;
+<span class="pl-k">const</span> <span class="pl-c1">LOG_LEVEL</span> <span class="pl-k">=</span> <span class="pl-c1">process</span>.<span class="pl-smi">env</span>.<span class="pl-c1">EXOBOT_LOG_LEVEL</span> <span class="pl-k">||</span> <span class="pl-smi">Exobot</span>.<span class="pl-smi">LogLevels</span>.<span class="pl-c1">INFO</span>;
+
+<span class="pl-k">const</span> <span class="pl-c1">shell</span> <span class="pl-k">=</span> <span class="pl-smi">adapters</span>.<span class="pl-smi">Shell</span>;
+
+<span class="pl-k">const</span> <span class="pl-c1">bot</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">Exobot</span>(<span class="pl-c1">BOT_NAME</span>, {
+  alias<span class="pl-k">:</span> <span class="pl-c1">BOT_ALIAS</span>,
+  adapters<span class="pl-k">:</span> [
+    <span class="pl-k">new</span> <span class="pl-en">shell</span>(),
+  ],
+  plugins<span class="pl-k">:</span> [
+    <span class="pl-k">new</span> <span class="pl-en">Help</span>(),
+    <span class="pl-k">new</span> <span class="pl-en">Greetings</span>(),
+  ],
+  logLevel<span class="pl-k">:</span> <span class="pl-c1">LOG_LEVEL</span>,
+});
+
+<span class="pl-c1">module</span>.<span class="pl-smi">exports</span> <span class="pl-k">=</span> bot;</pre></div>
+
+<pre><code>$ node index.js
+&gt; Chat: hi, exobot
+&gt; exobot: hi, shell!
+</code></pre>
+
+<p>What did we do there?</p>
+
+<ul>
+<li>Created a file named <code>index.js</code>
+</li>
+<li>Imported the <code>Exobot</code> class, service adapters, and plugins</li>
+<li>Initialized a new bot, passing in its name, configured service adapters and
+plugins</li>
+<li>Started the bot</li>
+<li>Ran <code>node index.js</code> and interacted with the bot</li>
+</ul>
+
+<h2>
+<a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting started</h2>
+
+<p>The easiest way to start is copy the example above - this will get you started
+with a chatbot with a shell adapter. The shell adapter will start an
+interactive console with which you can chat in a single "room"; Exobot will
+respond to messages that trigger plugins.</p>
+
+<ol>
+<li>Make a directory somewhere that you want to keep your bot's configuration
+code.</li>
+<li>Run <code>git init</code> (or source control initialization method of choice), then
+<code>npm init</code> to start up an NPM package. (You probably won't publish your bot
+as its own package - but this will create a <code>package.json</code> file that contains
+your dependencies.)</li>
+<li>Run <code>npm install --save @exoplay/exobot</code> to install the chatbot.</li>
+<li>Copy the example above to <code>index.js</code>.</li>
+<li>Run <code>node index.js</code>. Chat with yourself for a while, then read on to learn
+how to configure your chatbot, or even build your own plugins and adapters.</li>
+</ol>
+
+<h2>
+<a id="configuration" class="anchor" href="#configuration" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Configuration</h2>
+
+<p>Exobot is configured in its constructor, which takes two arguments - a bot
+name (a required string), and an options object.</p>
+
+<p>The bot name is used for commands - if your bot's name is <code>'exobot'</code>, it will
+<code>respond</code> to commands beginning with <code>'exobot'</code>. You'll want this to match the
+name used in your chat service (so if its name is actually <code>'DEATHBOT_9000'</code> in
+Slack, you should call it that here too, or people may be confused.) </p>
+
+<p>The options object contains all other configuration - such as a list of
+plugins and chat service adapters, log levels, and data encryption keys.</p>
+
+<ul>
+<li>
+<code>alias</code> - an additional way to trigger exobot commands. <code>'/'</code>, <code>';'</code>, or
+<code>'hey bot'</code>, for example.</li>
+<li>
+<code>adapters</code> - an array of initialized chat adapters, such as
+<a href="https://github.com/exoplay/exobot-adapter-slack">slack</a>,
+<a href="https://github.com/exoplay/exobot-adapter-discord">discord</a>,
+or <a href="https://github.com/exoplay/exobot-adapter-twitch">twitch</a>. exobot
+also comes with a <code>shell</code> adapter for playing around in your terminal.</li>
+<li>
+<code>plugins</code> - an array of initialized plugins, such as 
+<a href="https://github.com/exoplay/exobot-plugin-giphy">giphy</a> or
+<a href="https://github.com/exoplay/exobot-plugin-points">points</a>. exobot also
+comes with <code>help</code> and <code>greetings</code> plugins as examples.</li>
+<li>
+<code>readFile</code> and <code>writeFile</code> - functions called when the in-memory json db
+is saved. By default, this writes a json file to <code>cwd/data/botname.json</code>,
+but you could also override the default local file storage to use s3 with
+<a href="https://github.com/exoplay/exobot-db-s3">exobot-db-s3</a>.</li>
+<li>
+<code>dbPath</code> - if you're using local file storage, you can set where to save.
+Defaults to <code>cwd/data/botname.json</code>.</li>
+</ul>
+
+<h2>
+<a id="building-plugins" class="anchor" href="#building-plugins" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building plugins</h2>
+
+<p>Most plugins respond to chat messages - either by <code>listen</code>ing to <em>all</em> chat
+messages, or <code>respond</code>ing to specific commands.</p>
+
+<h3>
+<a id="an-example-plugin" class="anchor" href="#an-example-plugin" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>An Example Plugin</h3>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">import</span> { <span class="pl-smi">ChatPlugin</span> } <span class="pl-k">from</span> <span class="pl-s"><span class="pl-pds">'</span>@exoplay/exobot<span class="pl-pds">'</span></span>;
+
+<span class="pl-k">export</span> <span class="pl-v">default</span> <span class="pl-k">class</span> <span class="pl-en">Ping</span> <span class="pl-k">extends</span> <span class="pl-e">ChatPlugin</span> {
+  help <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>Says "pong" when you send it "ping"<span class="pl-pds">'</span></span>;
+
+  <span class="pl-en">register</span> (<span class="pl-smi">bot</span>) {
+    <span class="pl-v">this</span>.<span class="pl-en">respond</span>(<span class="pl-sr"><span class="pl-pds">/</span>ping<span class="pl-pds">/</span></span>, <span class="pl-v">this</span>.<span class="pl-smi">pong</span>);
+  }
+
+  <span class="pl-en">pong</span> (<span class="pl-smi">match</span>, <span class="pl-smi">message</span>) {
+    <span class="pl-k">return</span> <span class="pl-s"><span class="pl-pds">'</span>pong<span class="pl-pds">'</span></span>;
+  }
+}</pre></div>
+
+<p>In this plugin, we have extended exobot's ChatPlugin class - this gives it
+functionality to respond to chat messages. We've then told it to <code>respond</code> to
+the regex <code>/ping/</code> by firing a function, called <code>pong</code>. The <code>return</code> value of
+the function is then sent back to the chat channel.</p>
+
+<h3>
+<a id="a-detailed-anatomy-of-a-chat-plugin" class="anchor" href="#a-detailed-anatomy-of-a-chat-plugin" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>A Detailed Anatomy of a Chat Plugin</h3>
+
+<p>Chat plugins follow the following lifecycle:</p>
+
+<p>First, The <code>constructor</code> is called with options sent in. As the bot is
+initialized with <em>instances</em> of plugins, this is where you would pass in
+configuration options, such as:</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">class</span> <span class="pl-en">StatusPlugin</span> <span class="pl-k">extends</span> <span class="pl-e">ChatPlugin</span> {
+  <span class="pl-en">constructor </span>(<span class="pl-smi">options</span>) {
+    <span class="pl-v">super</span>(options);
+    <span class="pl-v">this</span>.<span class="pl-smi">endpoint</span> <span class="pl-k">=</span> <span class="pl-smi">options</span>.<span class="pl-smi">endpoint</span>;
+  }
+
+  <span class="pl-c">//...</span>
+
+  <span class="pl-k">async</span> <span class="pl-en">getStatus</span> () {
+    <span class="pl-k">const</span> <span class="pl-c1">res</span> <span class="pl-k">=</span> <span class="pl-k">await</span> <span class="pl-v">this</span>.<span class="pl-smi">http</span>.<span class="pl-en">get</span>(<span class="pl-v">this</span>.<span class="pl-smi">endpoint</span>);
+    <span class="pl-k">return</span> <span class="pl-smi">res</span>.<span class="pl-smi">statusCode</span>;
+  }
+}</pre></div>
+
+<p>In the above example, we'd initialize the exobot instance with
+<code>plugins: [ new StatsPlugin({ endpoint: 'https://github.com' }) ]</code> to pass
+in the options we need later on.</p>
+
+<p>Next, when the bot instance begins listening, the plugin's <code>register</code> method is
+called, with the <code>bot</code> instace passed in. Note that the constructor doesn't have
+the bot yet - it doesn't exist until <code>register</code>.</p>
+
+<p><code>register</code> is also where you register <code>listen</code> and <code>respond</code> commands. <code>listen</code>
+and <code>respond</code> are the most important parts of your chat plugin - these allow the
+bot to interact with chat. Each can take either a regex <em>or</em> a function, and if
+a match is found (or, if a function, if it is truthy), it will fire the
+function passed in. Functions for responding can be promises (or
+ES7 <code>async</code> functions) and will resolve when the promises do. This makes it
+easy to write asynchronous code, such as firing http requests.</p>
+
+<p>The responding function gets two arguments: a <code>match</code> object, which is either
+the regex's <code>exec</code> response or the function return value, and a <code>Message</code>
+object, which contains the original message, user, and whether the message is a
+whisper.</p>
+
+<p>You can optionally add a <code>help</code> property, which exobot's <code>help</code> plugin uses to
+explain to useres how the plugin works.</p>
+
+<p>Finally, the bot also exposes <code>bot.http</code>, which is a promise-ified
+<a href="https://visionmedia.github.io/superagent/">superagent</a> wrapper, to make http
+calls easy to make.</p>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-k">class</span> <span class="pl-en">StatusPlugin</span> <span class="pl-k">extends</span> <span class="pl-e">ChatPlugin</span> {
+  help <span class="pl-k">=</span> [
+    <span class="pl-s"><span class="pl-pds">'</span>Get the status of an http endpoint. Responds to `status` or listens to<span class="pl-pds">'</span></span>,
+    <span class="pl-s"><span class="pl-pds">'</span>status &lt;http://whatever.com&gt;.<span class="pl-pds">'</span></span>
+  ].<span class="pl-c1">join</span>(<span class="pl-s"><span class="pl-pds">'</span><span class="pl-cce">\n</span><span class="pl-pds">'</span></span>);
+
+  <span class="pl-en">constructor </span>(<span class="pl-smi">options</span>) {
+    <span class="pl-v">super</span>(options);
+    <span class="pl-v">this</span>.<span class="pl-smi">endpoint</span> <span class="pl-k">=</span> <span class="pl-smi">options</span>.<span class="pl-smi">endpoint</span>;
+  }
+
+  <span class="pl-en">register</span> (<span class="pl-smi">bot</span>) {
+    <span class="pl-v">super</span>.<span class="pl-en">register</span>(bot);
+
+    <span class="pl-k">if</span> (<span class="pl-k">!</span><span class="pl-v">this</span>.<span class="pl-smi">endpoint</span>) {
+      <span class="pl-smi">bot</span>.<span class="pl-smi">log</span>.<span class="pl-en">warn</span>(<span class="pl-s"><span class="pl-pds">'</span>No endpoint passed in to StatusPlugin.<span class="pl-pds">'</span></span>);
+    }
+
+    <span class="pl-v">this</span>.<span class="pl-en">respond</span>(<span class="pl-sr"><span class="pl-pds">/</span>status<span class="pl-pds">/</span></span>, <span class="pl-v">this</span>.<span class="pl-smi">getStatus</span>);
+    <span class="pl-v">this</span>.<span class="pl-en">listen</span>(<span class="pl-sr"><span class="pl-pds">/</span><span class="pl-k">^</span>status (http:<span class="pl-cce">\/\/</span><span class="pl-c1">\S</span><span class="pl-k">+</span>)<span class="pl-pds">/</span></span>, <span class="pl-v">this</span>.<span class="pl-smi">getStatus</span>);
+
+    <span class="pl-v">this</span>.<span class="pl-en">listen</span>(<span class="pl-smi">m</span> <span class="pl-k">=&gt;</span> m <span class="pl-k">===</span> <span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>, <span class="pl-v">this</span>.<span class="pl-smi">getStatus</span>);
+  }
+
+  <span class="pl-k">async</span> <span class="pl-en">getStatus</span> (<span class="pl-smi">match</span>, <span class="pl-smi">message</span>) {
+    <span class="pl-k">let</span> endpoint <span class="pl-k">=</span> <span class="pl-v">this</span>.<span class="pl-smi">endpoint</span>;
+
+    <span class="pl-c">// if the regex succeeded, match[1] should be an http endpoint</span>
+    <span class="pl-k">if</span> (match <span class="pl-k">&amp;&amp;</span> <span class="pl-smi">match</span>.<span class="pl-c1">length</span>) {
+      endpoint <span class="pl-k">=</span> match[<span class="pl-c1">1</span>];
+    }
+
+    <span class="pl-k">const</span> <span class="pl-c1">res</span> <span class="pl-k">=</span> <span class="pl-k">await</span> <span class="pl-v">this</span>.<span class="pl-smi">http</span>.<span class="pl-en">get</span>(<span class="pl-v">this</span>.<span class="pl-smi">endpoint</span>);
+    <span class="pl-k">return</span> <span class="pl-smi">res</span>.<span class="pl-smi">statusCode</span>;
+  }
+}</pre></div>
+
+<p>You can also build other types of plugins: <code>EventPlugin</code>, <code>HTTPPlugin</code>, or build
+your own class of plugin with the <code>Plugin</code> class. Documentation to come someday.</p>
+
+<h2>
+<a id="building-adapters" class="anchor" href="#building-adapters" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building adapters</h2>
+
+<h2>
+<a id="acknowledgements" class="anchor" href="#acknowledgements" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Acknowledgements</h2>
+
+<p>Exobot is loosely based on <a href="https://github.com/github/hubot">hubot</a>, for which
+the author has a great deal of admiration. Hubot is more user-friendly in many
+ways (autoloading scripts, for example, instead of requiring the user to write
+their own imports and configuration). In other ways, this flexibility can be
+limiting; it's easier to make a pure-js bot more efficient and testable (and
+the author thinks that ES6, rather than Coffeescript, is a more viable choice
+of language; plugin-writers can always choose to opt-in to Coffeescript and
+export a built file if they want.)</p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p>LGPL licensed. Copyright 2016 Exoplay, LLC. See LICENSE file for more details.</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/exoplay/exobot">Exobot</a> is maintained by <a href="https://github.com/exoplay">exoplay</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
