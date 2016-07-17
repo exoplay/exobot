@@ -24,12 +24,6 @@
   "devDependencies": {
     "@r/build": "git://github.com/ajacksified/node-build#679c3f3d47c0916237d55128ece4cc817b489ef8"
   },
-  "peerDependencies": {
-    "aws-sdk": "^2.3.19",
-    "discord.io": "~1.11.1",
-    "@slack/client": "~2.0.6",
-    "tmi.js": "~0.0.29"
-  },
   "dependencies": {
     "babel-polyfill": "~6.9.1",
     "cryptr": "~2.0.0",
@@ -37,6 +31,7 @@
     "fetch-ponyfill": "~1.0.0",
     "fs-extra": "~0.30.0",
     "lodash": "~4.13.1",
+    "log": "^1.4.0",
     "lowdb": "~0.13.1",
     "node-uuid": "~1.4.7",
     "superagent": "~2.0.0",
