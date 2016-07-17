@@ -12,6 +12,9 @@ An ES6+ chatbot. Requires Node ^6.2.
 
 ## A Brief Example
 
+To start an exobot instance, you need to import the bot itself and initialize it
+with plugins and chat service adapters.
+
 ```javascript
 const { Exobot, adapters, plugins } = require('@exoplay/exobot');
 const { Help, Greetings } = plugins;
@@ -111,7 +114,11 @@ plugins and chat service adapters, log levels, and data encryption keys.
 ## Building plugins
 
 Most plugins respond to chat messages - either by `listen`ing to _all_ chat
-messages, or `respond`ing to specific commands.
+messages, or `respond`ing to specific commands. exobot comes with `greetings`
+and `help` plugins, but building your own is easy. Some examples:
+
+* [giphy, for gif search](https://github.com/exoplay/exobot-plugin-giphy)
+* [points, for fun](https://github.com/exoplay/exobot-plugin-points)
 
 ### An Example Plugin
 
@@ -232,10 +239,121 @@ your own class of plugin with the `Plugin` class. Documentation to come someday.
 
 
 
-## Building adapters
+## Building Adapters
 
+Adapters allow your bot to connect to a chat service, such as Slack or Discord.
+exobot comes with a shell adapter by default, but you could also build your own
+for your chat service of choice. Some examples:
 
+* [slack](https://github.com/exoplay/exobot-adapter-slack)
+* [discord](https://github.com/exoplay/exobot-adapter-discord)
+* [twitch](https://github.com/exoplay/exobot-adapter-twitch)
 
+### An Example Adapter
+
+```javascript
+// An example: import an API lib for your chat service, or do it with raw
+// sockets or http, or whatever.
+import ChatServiceLibrary from '@chatservice/lib';
+import { Adapter, User } from '@exoplay/exobot';
+
+export default class ChatServiceAdapter extends Adapter {
+  constructor ({ token, username }) {
+    super(...arguments);
+    this.token = token;
+    this.username = username;
+  }
+
+  register (bot) {
+    super.register(bot);
+    // Initialize the chat service lib we pulled in earlier
+    this.service = new ChatServiceLibrary(this.username, this.token);
+
+    // listen to some events. bind the functions to `this` to make sure we can
+    // access our class instance, bot, and `super`.
+    this.service.on('ready', this.serviceReady.bind(this));
+    this.service.on('message', this.serviceMessage.bind(this));
+  }
+
+  // the `send` funciton is defined by Adapter and called by plugins when they
+  // resolve (if they resolve.)
+  send (message) {
+    this.bot.log.debug(`Sending ${message.text} to ${message.channel}`);
+
+    // Send the message data to the chat service client.
+    this.service.sendMessage({
+      to: message.channel,
+      message: message.text,
+    });
+  }
+
+  serviceReady () {
+    this.status = Adapter.STATUS.CONNECTED;
+    this.bot.emitter.emit('connected', this.id);
+    this.bot.log.notice('Connected to ChatService.');
+  }
+
+  // We'll pretend our fake chat service lib takes a function which is called
+  // with message, user, and channel. We'll take these arguments and "receive"
+  // them, which will fire off all of the plugins so they can respond where
+  // necessary.
+  serviceMessage (user, text, channel) {
+    // We don't want to listen to messages from ourself.
+    if (user.name === this.username) { return; }
+
+    // Create a new User instance to pass along in the Message.
+    const user = new User(user.name, user.id);
+
+    // Check if our fake chat service lib says the channel is "private". If it
+    // is a private message between the user and bot, we'll make it act like a
+    // "respond" command instead of just a "listen".
+    if (channel.private) {
+      return super.receiveWhisper({ user, text, channel });
+    }
+
+    return this.receive({ user, text, channel });
+  }
+}
+
+```
+
+### A Detailed Anatomy of a Chat Service Adapter
+
+Chat service adapters have a similar lifecycle to plugins:
+
+1. Constructor, before the bot is initialized;
+2. Register, when the bot is initialized, where you first get acccess to the
+  exobot instance, and where you listen to your chat service;
+3. Functions called by events fired by the chat service;
+4. Finally, `send`, called by the bot instance when plugins resolve.
+
+You can listen and fire any arbitrary functions - for example, some chat
+services may include presence information, and fire `enter` and `leave` events.
+You can then `receive` your own `PresenceMessage` similar to how we `receive` a
+`TextMessage` in the `serviceMessage` in the example. (Right now, the only
+`Message` classes are `TextMessage` and `PresenceMessage`). Many adapters may
+also want to make use of the `Status` enum, which could be:
+
+* UNINITIALIZED
+* CONNECTING
+* CONNECTED
+* DISCONNECTED
+* RECONNECTING
+* ERROR
+
+You may also want to use `bot.log` to log important events to stdout, such as
+connection or configuration errors. `bot.log` can fire:
+
+* debug
+* info
+* notice
+* warning
+* error
+* critical
+* alert
+* emergency
+
+In order of ascending severity.
 
 
 ## Acknowledgements
