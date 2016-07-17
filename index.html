@@ -34,6 +34,9 @@
 <h2>
 <a id="a-brief-example" class="anchor" href="#a-brief-example" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>A Brief Example</h2>
 
+<p>To start an exobot instance, you need to import the bot itself and initialize it
+with plugins and chat service adapters.</p>
+
 <div class="highlight highlight-source-js"><pre><span class="pl-k">const</span> { <span class="pl-c1">Exobot</span>, <span class="pl-c1">adapters</span>, <span class="pl-c1">plugins</span> } <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>@exoplay/exobot<span class="pl-pds">'</span></span>);
 <span class="pl-k">const</span> { <span class="pl-c1">Help</span>, <span class="pl-c1">Greetings</span> } <span class="pl-k">=</span> plugins;
 
@@ -138,7 +141,13 @@ Defaults to <code>cwd/data/botname.json</code>.</li>
 <a id="building-plugins" class="anchor" href="#building-plugins" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building plugins</h2>
 
 <p>Most plugins respond to chat messages - either by <code>listen</code>ing to <em>all</em> chat
-messages, or <code>respond</code>ing to specific commands.</p>
+messages, or <code>respond</code>ing to specific commands. exobot comes with <code>greetings</code>
+and <code>help</code> plugins, but building your own is easy. Some examples:</p>
+
+<ul>
+<li><a href="https://github.com/exoplay/exobot-plugin-giphy">giphy, for gif search</a></li>
+<li><a href="https://github.com/exoplay/exobot-plugin-points">points, for fun</a></li>
+</ul>
 
 <h3>
 <a id="an-example-plugin" class="anchor" href="#an-example-plugin" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>An Example Plugin</h3>
@@ -254,7 +263,129 @@ calls easy to make.</p>
 your own class of plugin with the <code>Plugin</code> class. Documentation to come someday.</p>
 
 <h2>
-<a id="building-adapters" class="anchor" href="#building-adapters" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building adapters</h2>
+<a id="building-adapters" class="anchor" href="#building-adapters" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Building Adapters</h2>
+
+<p>Adapters allow your bot to connect to a chat service, such as Slack or Discord.
+exobot comes with a shell adapter by default, but you could also build your own
+for your chat service of choice. Some examples:</p>
+
+<ul>
+<li><a href="https://github.com/exoplay/exobot-adapter-slack">slack</a></li>
+<li><a href="https://github.com/exoplay/exobot-adapter-discord">discord</a></li>
+<li><a href="https://github.com/exoplay/exobot-adapter-twitch">twitch</a></li>
+</ul>
+
+<h3>
+<a id="an-example-adapter" class="anchor" href="#an-example-adapter" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>An Example Adapter</h3>
+
+<div class="highlight highlight-source-js"><pre><span class="pl-c">// An example: import an API lib for your chat service, or do it with raw</span>
+<span class="pl-c">// sockets or http, or whatever.</span>
+<span class="pl-k">import</span> <span class="pl-smi">ChatServiceLibrary</span> <span class="pl-k">from</span> <span class="pl-s"><span class="pl-pds">'</span>@chatservice/lib<span class="pl-pds">'</span></span>;
+<span class="pl-k">import</span> { <span class="pl-smi">Adapter</span>, <span class="pl-smi">User</span> } <span class="pl-k">from</span> <span class="pl-s"><span class="pl-pds">'</span>@exoplay/exobot<span class="pl-pds">'</span></span>;
+
+<span class="pl-k">export</span> <span class="pl-v">default</span> <span class="pl-k">class</span> <span class="pl-en">ChatServiceAdapter</span> <span class="pl-k">extends</span> <span class="pl-e">Adapter</span> {
+  <span class="pl-en">constructor </span>({ token, username }) {
+    <span class="pl-v">super</span>(<span class="pl-k">...</span>arguments);
+    <span class="pl-v">this</span>.<span class="pl-smi">token</span> <span class="pl-k">=</span> token;
+    <span class="pl-v">this</span>.<span class="pl-smi">username</span> <span class="pl-k">=</span> username;
+  }
+
+  <span class="pl-en">register</span> (<span class="pl-smi">bot</span>) {
+    <span class="pl-v">super</span>.<span class="pl-en">register</span>(bot);
+    <span class="pl-c">// Initialize the chat service lib we pulled in earlier</span>
+    <span class="pl-v">this</span>.<span class="pl-smi">service</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">ChatServiceLibrary</span>(<span class="pl-v">this</span>.<span class="pl-smi">username</span>, <span class="pl-v">this</span>.<span class="pl-smi">token</span>);
+
+    <span class="pl-c">// listen to some events. bind the functions to `this` to make sure we can</span>
+    <span class="pl-c">// access our class instance, bot, and `super`.</span>
+    <span class="pl-v">this</span>.<span class="pl-smi">service</span>.<span class="pl-en">on</span>(<span class="pl-s"><span class="pl-pds">'</span>ready<span class="pl-pds">'</span></span>, <span class="pl-v">this</span>.<span class="pl-smi">serviceReady</span>.<span class="pl-en">bind</span>(<span class="pl-v">this</span>));
+    <span class="pl-v">this</span>.<span class="pl-smi">service</span>.<span class="pl-en">on</span>(<span class="pl-s"><span class="pl-pds">'</span>message<span class="pl-pds">'</span></span>, <span class="pl-v">this</span>.<span class="pl-smi">serviceMessage</span>.<span class="pl-en">bind</span>(<span class="pl-v">this</span>));
+  }
+
+  <span class="pl-c">// the `send` funciton is defined by Adapter and called by plugins when they</span>
+  <span class="pl-c">// resolve (if they resolve.)</span>
+  <span class="pl-en">send</span> (<span class="pl-smi">message</span>) {
+    <span class="pl-v">this</span>.<span class="pl-smi">bot</span>.<span class="pl-smi">log</span>.<span class="pl-en">debug</span>(<span class="pl-s"><span class="pl-pds">`</span>Sending <span class="pl-s1"><span class="pl-pse">${</span><span class="pl-smi">message</span>.<span class="pl-c1">text</span><span class="pl-pse">}</span></span> to <span class="pl-s1"><span class="pl-pse">${</span><span class="pl-smi">message</span>.<span class="pl-smi">channel</span><span class="pl-pse">}</span></span><span class="pl-pds">`</span></span>);
+
+    <span class="pl-c">// Send the message data to the chat service client.</span>
+    <span class="pl-v">this</span>.<span class="pl-smi">service</span>.<span class="pl-en">sendMessage</span>({
+      to<span class="pl-k">:</span> <span class="pl-smi">message</span>.<span class="pl-smi">channel</span>,
+      message<span class="pl-k">:</span> <span class="pl-smi">message</span>.<span class="pl-c1">text</span>,
+    });
+  }
+
+  <span class="pl-en">serviceReady</span> () {
+    <span class="pl-v">this</span>.<span class="pl-c1">status</span> <span class="pl-k">=</span> <span class="pl-smi">Adapter</span>.<span class="pl-c1">STATUS</span>.<span class="pl-c1">CONNECTED</span>;
+    <span class="pl-v">this</span>.<span class="pl-smi">bot</span>.<span class="pl-smi">emitter</span>.<span class="pl-en">emit</span>(<span class="pl-s"><span class="pl-pds">'</span>connected<span class="pl-pds">'</span></span>, <span class="pl-v">this</span>.<span class="pl-c1">id</span>);
+    <span class="pl-v">this</span>.<span class="pl-smi">bot</span>.<span class="pl-smi">log</span>.<span class="pl-en">notice</span>(<span class="pl-s"><span class="pl-pds">'</span>Connected to ChatService.<span class="pl-pds">'</span></span>);
+  }
+
+  <span class="pl-c">// We'll pretend our fake chat service lib takes a function which is called</span>
+  <span class="pl-c">// with message, user, and channel. We'll take these arguments and "receive"</span>
+  <span class="pl-c">// them, which will fire off all of the plugins so they can respond where</span>
+  <span class="pl-c">// necessary.</span>
+  <span class="pl-en">serviceMessage</span> (<span class="pl-smi">user</span>, <span class="pl-smi">text</span>, <span class="pl-smi">channel</span>) {
+    <span class="pl-c">// We don't want to listen to messages from ourself.</span>
+    <span class="pl-k">if</span> (<span class="pl-smi">user</span>.<span class="pl-c1">name</span> <span class="pl-k">===</span> <span class="pl-v">this</span>.<span class="pl-smi">username</span>) { <span class="pl-k">return</span>; }
+
+    <span class="pl-c">// Create a new User instance to pass along in the Message.</span>
+    <span class="pl-k">const</span> <span class="pl-c1">user</span> <span class="pl-k">=</span> <span class="pl-k">new</span> <span class="pl-en">User</span>(<span class="pl-smi">user</span>.<span class="pl-c1">name</span>, <span class="pl-smi">user</span>.<span class="pl-c1">id</span>);
+
+    <span class="pl-c">// Check if our fake chat service lib says the channel is "private". If it</span>
+    <span class="pl-c">// is a private message between the user and bot, we'll make it act like a</span>
+    <span class="pl-c">// "respond" command instead of just a "listen".</span>
+    <span class="pl-k">if</span> (<span class="pl-smi">channel</span>.<span class="pl-smi">private</span>) {
+      <span class="pl-k">return</span> <span class="pl-v">super</span>.<span class="pl-en">receiveWhisper</span>({ user, text, channel });
+    }
+
+    <span class="pl-k">return</span> <span class="pl-v">this</span>.<span class="pl-en">receive</span>({ user, text, channel });
+  }
+}
+</pre></div>
+
+<h3>
+<a id="a-detailed-anatomy-of-a-chat-service-adapter" class="anchor" href="#a-detailed-anatomy-of-a-chat-service-adapter" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>A Detailed Anatomy of a Chat Service Adapter</h3>
+
+<p>Chat service adapters have a similar lifecycle to plugins:</p>
+
+<ol>
+<li>Constructor, before the bot is initialized;</li>
+<li>Register, when the bot is initialized, where you first get acccess to the
+exobot instance, and where you listen to your chat service;</li>
+<li>Functions called by events fired by the chat service;</li>
+<li>Finally, <code>send</code>, called by the bot instance when plugins resolve.</li>
+</ol>
+
+<p>You can listen and fire any arbitrary functions - for example, some chat
+services may include presence information, and fire <code>enter</code> and <code>leave</code> events.
+You can then <code>receive</code> your own <code>PresenceMessage</code> similar to how we <code>receive</code> a
+<code>TextMessage</code> in the <code>serviceMessage</code> in the example. (Right now, the only
+<code>Message</code> classes are <code>TextMessage</code> and <code>PresenceMessage</code>). Many adapters may
+also want to make use of the <code>Status</code> enum, which could be:</p>
+
+<ul>
+<li>UNINITIALIZED</li>
+<li>CONNECTING</li>
+<li>CONNECTED</li>
+<li>DISCONNECTED</li>
+<li>RECONNECTING</li>
+<li>ERROR</li>
+</ul>
+
+<p>You may also want to use <code>bot.log</code> to log important events to stdout, such as
+connection or configuration errors. <code>bot.log</code> can fire:</p>
+
+<ul>
+<li>debug</li>
+<li>info</li>
+<li>notice</li>
+<li>warning</li>
+<li>error</li>
+<li>critical</li>
+<li>alert</li>
+<li>emergency</li>
+</ul>
+
+<p>In order of ascending severity.</p>
 
 <h2>
 <a id="acknowledgements" class="anchor" href="#acknowledgements" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Acknowledgements</h2>
