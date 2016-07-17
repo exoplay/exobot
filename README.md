@@ -69,9 +69,38 @@ respond to messages that trigger plugins.
 
 ## Configuration
 
-## Building adapters
+Exobot is configured in its constructor, which takes two arguments - a bot
+name (a required string), and an options object.
+
+The bot name is used for commands - if your bot's name is `'exobot'`, it will
+`respond` to commands beginning with `'exobot'`. You'll want this to match the
+name used in your chat service (so if its name is actually `'DEATHBOT_9000'` in
+Slack, you should call it that here too, or people may be confused.) 
+
+The options object contains all other configuration - such as a list of
+plugins and chat service adapters, log levels, and data encryption keys.
+
+* `alias` - an additional way to trigger exobot commands. `'/'`, `';'`, or
+  `'hey bot'`, for example.
+* `adapters` - an array of initialized chat adapters, such as
+  [slack](https://github.com/exoplay/exobot-adapter-slack),
+  [discord](https://github.com/exoplay/exobot-adapter-discord),
+  or [twitch](https://github.com/exoplay/exobot-adapter-twitch). exobot
+  also comes with a `shell` adapter for playing around in your terminal.
+* `plugins` - an array of initialized plugins, such as 
+  [giphy](https://github.com/exoplay/exobot-plugin-giphy) or
+  [points](https://github.com/exoplay/exobot-plugin-points). exobot also
+  comes with `help` and `greetings` plugins as examples.
+* `readFile` and `writeFile` - functions called when the in-memory json db
+  is saved. By default, this writes a json file to `cwd/data/botname.json`,
+  but you could also override the default local file storage to use s3 with
+  [exobot-db-s3](https://github.com/exoplay/exobot-db-s3).
+* `dbPath` - if you're using local file storage, you can set where to save.
+  Defaults to `cwd/data/botname.json`.
 
 ## Building plugins
+
+## Building adapters
 
 ## Acknowledgements
 
