@@ -115,7 +115,7 @@ messages, or `respond`ing to specific commands.
 
 ### An Example Plugin
 
-```
+```javascript
 import { ChatPlugin } from '@exoplay/exobot';
 
 export default class Ping extends ChatPlugin {
@@ -144,7 +144,7 @@ First, The `constructor` is called with options sent in. As the bot is
 initialized with _instances_ of plugins, this is where you would pass in
 configuration options, such as:
 
-```
+```javascript
 class StatusPlugin extends ChatPlugin {
   constructor (options) {
     super(options);
@@ -188,7 +188,7 @@ Finally, the bot also exposes `bot.http`, which is a promise-ified
 [superagent](https://visionmedia.github.io/superagent/) wrapper, to make http
 calls easy to make.
 
-```
+```javascript
 class StatusPlugin extends ChatPlugin {
   help = [
     'Get the status of an http endpoint. Responds to `status` or listens to',
