@@ -106,3 +106,4 @@ export * from './messages';
 export * from './plugins';
 export * from './db';
 export { default as User } from './user';
+export const LogLevels = Log;

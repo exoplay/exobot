@@ -9,15 +9,12 @@ An ES6+ chatbot. Requires Node ^6.2.
 ## A Brief Example
 
 ```javascript
-const Log = require('log');
-
-const { Exobot, adapters, plugins } = require('../exobot');
+const { Exobot, adapters, plugins } = require('@exoplay/exobot');
 const { Help, Greetings } = plugins;
 
 const BOT_ALIAS = '!e';
 const BOT_NAME = 'exobot';
-const HTTP_LISTENER_PORT = process.env.PORT || '8080';
-const LOG_LEVEL = process.env.EXOBOT_LOG_LEVEL || Log.INFO;
+const LOG_LEVEL = process.env.EXOBOT_LOG_LEVEL || Exobot.LogLevels.INFO;
 
 const shell = adapters.Shell;
 
@@ -30,7 +27,6 @@ const bot = new Exobot(BOT_NAME, {
     new Help(),
     new Greetings(),
   ],
-  port: HTTP_LISTENER_PORT,
   logLevel: LOG_LEVEL,
 });
 
@@ -49,7 +45,7 @@ What did we do there?
 * Created a file named `index.js`
 * Imported the `Exobot` class, service adapters, and plugins
 * Initialized a new bot, passing in its name, configured service adapters and
-  plugins, and configured an HTTP port
+  plugins
 * Started the bot
 * Ran `node index.js` and interacted with the bot
 
@@ -87,11 +83,6 @@ limiting; it's easier to make a pure-js bot more efficient and testable (and
 the author thinks that ES6, rather than Coffeescript, is a more viable choice
 of language; plugin-writers can always choose to opt-in to Coffeescript and
 export a built file if they want.)
-
-Additional thanks to the many, many Hubot script-writers that have provided a
-large base of existing scripts and adapters which were converted to Exobot. The
-original scripts' information has been preserved where scripts were converted
-rather than re-built.
 
 ## License
 
