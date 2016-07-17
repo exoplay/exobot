@@ -2,9 +2,13 @@
 
 An ES6+ chatbot. Requires Node ^6.2.
 
+
+
 ## Installation
 
 * `npm install --save @exoplay/exobot`
+
+
 
 ## A Brief Example
 
@@ -49,6 +53,8 @@ What did we do there?
 * Started the bot
 * Ran `node index.js` and interacted with the bot
 
+
+
 ## Getting started
 
 The easiest way to start is copy the example above - this will get you started
@@ -66,6 +72,8 @@ respond to messages that trigger plugins.
 4. Copy the example above to `index.js`.
 5. Run `node index.js`. Chat with yourself for a while, then read on to learn
   how to configure your chatbot, or even build your own plugins and adapters.
+
+
 
 ## Configuration
 
@@ -98,9 +106,137 @@ plugins and chat service adapters, log levels, and data encryption keys.
 * `dbPath` - if you're using local file storage, you can set where to save.
   Defaults to `cwd/data/botname.json`.
 
+
+
 ## Building plugins
 
+Most plugins respond to chat messages - either by `listen`ing to _all_ chat
+messages, or `respond`ing to specific commands.
+
+### An Example Plugin
+
+```
+import { ChatPlugin } from '@exoplay/exobot';
+
+export default class Ping extends ChatPlugin {
+  help = 'Says "pong" when you send it "ping"';
+
+  register (bot) {
+    this.respond(/ping/, this.pong);
+  }
+
+  pong (match, message) {
+    return 'pong';
+  }
+}
+```
+
+In this plugin, we have extended exobot's ChatPlugin class - this gives it
+functionality to respond to chat messages. We've then told it to `respond` to
+the regex `/ping/` by firing a function, called `pong`. The `return` value of
+the function is then sent back to the chat channel.
+
+### A Detailed Anatomy of a Chat Plugin
+
+Chat plugins follow the following lifecycle:
+
+First, The `constructor` is called with options sent in. As the bot is
+initialized with _instances_ of plugins, this is where you would pass in
+configuration options, such as:
+
+```
+class StatusPlugin extends ChatPlugin {
+  constructor (options) {
+    super(options);
+    this.endpoint = options.endpoint;
+  }
+
+  //...
+
+  async getStatus () {
+    const res = await this.http.get(this.endpoint);
+    return res.statusCode;
+  }
+}
+```
+
+In the above example, we'd initialize the exobot instance with
+`plugins: [ new StatsPlugin({ endpoint: 'https://github.com' }) ]` to pass
+in the options we need later on.
+
+Next, when the bot instance begins listening, the plugin's `register` method is
+called, with the `bot` instace passed in. Note that the constructor doesn't have
+the bot yet - it doesn't exist until `register`.
+
+`register` is also where you register `listen` and `respond` commands. `listen`
+and `respond` are the most important parts of your chat plugin - these allow the
+bot to interact with chat. Each can take either a regex _or_ a function, and if
+a match is found (or, if a function, if it is truthy), it will fire the
+function passed in. Functions for responding can be promises (or
+ES7 `async` functions) and will resolve when the promises do. This makes it
+easy to write asynchronous code, such as firing http requests.
+
+The responding function gets two arguments: a `match` object, which is either
+the regex's `exec` response or the function return value, and a `Message`
+object, which contains the original message, user, and whether the message is a
+whisper.
+
+You can optionally add a `help` property, which exobot's `help` plugin uses to
+explain to useres how the plugin works.
+
+Finally, the bot also exposes `bot.http`, which is a promise-ified
+[superagent](https://visionmedia.github.io/superagent/) wrapper, to make http
+calls easy to make.
+
+```
+class StatusPlugin extends ChatPlugin {
+  help = [
+    'Get the status of an http endpoint. Responds to `status` or listens to',
+    'status <http://whatever.com>.'
+  ].join('\n');
+
+  constructor (options) {
+    super(options);
+    this.endpoint = options.endpoint;
+  }
+
+  register (bot) {
+    super.register(bot);
+
+    if (!this.endpoint) {
+      bot.log.warn('No endpoint passed in to StatusPlugin.');
+    }
+
+    this.respond(/status/, this.getStatus);
+    this.listen(/^status (http:\/\/\S+)/, this.getStatus);
+
+    this.listen(m => m === 'status', this.getStatus);
+  }
+
+  async getStatus (match, message) {
+    let endpoint = this.endpoint;
+
+    // if the regex succeeded, match[1] should be an http endpoint
+    if (match && match.length) {
+      endpoint = match[1];
+    }
+
+    const res = await this.http.get(this.endpoint);
+    return res.statusCode;
+  }
+}
+```
+
+You can also build other types of plugins: `EventPlugin`, `HTTPPlugin`, or build
+your own class of plugin with the `Plugin` class. Documentation to come someday.
+
+
+
 ## Building adapters
+
+
+
+
 
 ## Acknowledgements
 
@@ -112,6 +248,8 @@ limiting; it's easier to make a pure-js bot more efficient and testable (and
 the author thinks that ES6, rather than Coffeescript, is a more viable choice
 of language; plugin-writers can always choose to opt-in to Coffeescript and
 export a built file if they want.)
+
+
 
 ## License
 
