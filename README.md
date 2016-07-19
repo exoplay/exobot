@@ -16,12 +16,12 @@ To start an exobot instance, you need to import the bot itself and initialize it
 with plugins and chat service adapters.
 
 ```javascript
-const { Exobot, adapters, plugins } = require('@exoplay/exobot');
+const { Exobot, adapters, plugins, LogLevels } = require('@exoplay/exobot');
 const { Help, Greetings } = plugins;
 
 const BOT_ALIAS = '!e';
 const BOT_NAME = 'exobot';
-const LOG_LEVEL = process.env.EXOBOT_LOG_LEVEL || Exobot.LogLevels.INFO;
+const LOG_LEVEL = process.env.EXOBOT_LOG_LEVEL || LogLevels.INFO;
 
 const shell = adapters.Shell;
 
