@@ -1,4 +1,6 @@
-import 'babel-polyfill';
+if (!global._babelPolyfill) {
+  require('babel-polyfill');
+}
 
 import Emitter from 'eventemitter3';
 import Log from 'log';
