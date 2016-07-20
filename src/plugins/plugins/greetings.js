@@ -18,7 +18,7 @@ const FAREWELLS = [
   'cya',
 ];
 
-const regex = (botname, list) => new RegExp(`^(${list.join('|')})[,\\s]*${botname}`, 'i');
+const regex = (botname, list) => new RegExp(`^(${list.join('|')})[,\\s]*@?${botname}`, 'i');
 
 export default class GreetingPlugin extends ChatPlugin {
   help = 'Greetings: says "hi" back. Say "hi <botname>" for a response.';
