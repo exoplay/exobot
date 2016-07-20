@@ -217,7 +217,7 @@ class StatusPlugin extends ChatPlugin {
     this.respond(/status/, this.getStatus);
     this.listen(/^status (http:\/\/\S+)/, this.getStatus);
 
-    this.listen(m => m === 'status', this.getStatus);
+    this.listen(m => m.text === 'status', this.getStatus);
   }
 
   async getStatus (match, message) {

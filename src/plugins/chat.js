@@ -15,7 +15,7 @@ export default class ChatPlugin extends Plugin {
 
   register (bot) {
     this.bot = bot;
-    this.botNameRegex = new RegExp(`^(?:(?:${bot.name}|${bot.alias})[,\\s:.-]*)(.+)`);
+    this.botNameRegex = new RegExp(`^(?:(?:@?${bot.name}|${bot.alias})[,\\s:.-]*)(.+)`, 'i');
 
     bot.emitter.on('receive-message', m => {
       this.respondFunctions.forEach(v => this.process(v[0], v[1], m, true));
