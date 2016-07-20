@@ -37,12 +37,12 @@
 <p>To start an exobot instance, you need to import the bot itself and initialize it
 with plugins and chat service adapters.</p>
 
-<div class="highlight highlight-source-js"><pre><span class="pl-k">const</span> { <span class="pl-c1">Exobot</span>, <span class="pl-c1">adapters</span>, <span class="pl-c1">plugins</span> } <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>@exoplay/exobot<span class="pl-pds">'</span></span>);
+<div class="highlight highlight-source-js"><pre><span class="pl-k">const</span> { <span class="pl-c1">Exobot</span>, <span class="pl-c1">adapters</span>, <span class="pl-c1">plugins</span>, <span class="pl-c1">LogLevels</span> } <span class="pl-k">=</span> <span class="pl-c1">require</span>(<span class="pl-s"><span class="pl-pds">'</span>@exoplay/exobot<span class="pl-pds">'</span></span>);
 <span class="pl-k">const</span> { <span class="pl-c1">Help</span>, <span class="pl-c1">Greetings</span> } <span class="pl-k">=</span> plugins;
 
 <span class="pl-k">const</span> <span class="pl-c1">BOT_ALIAS</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>!e<span class="pl-pds">'</span></span>;
 <span class="pl-k">const</span> <span class="pl-c1">BOT_NAME</span> <span class="pl-k">=</span> <span class="pl-s"><span class="pl-pds">'</span>exobot<span class="pl-pds">'</span></span>;
-<span class="pl-k">const</span> <span class="pl-c1">LOG_LEVEL</span> <span class="pl-k">=</span> <span class="pl-c1">process</span>.<span class="pl-smi">env</span>.<span class="pl-c1">EXOBOT_LOG_LEVEL</span> <span class="pl-k">||</span> <span class="pl-smi">Exobot</span>.<span class="pl-smi">LogLevels</span>.<span class="pl-c1">INFO</span>;
+<span class="pl-k">const</span> <span class="pl-c1">LOG_LEVEL</span> <span class="pl-k">=</span> <span class="pl-c1">process</span>.<span class="pl-smi">env</span>.<span class="pl-c1">EXOBOT_LOG_LEVEL</span> <span class="pl-k">||</span> <span class="pl-smi">LogLevels</span>.<span class="pl-c1">INFO</span>;
 
 <span class="pl-k">const</span> <span class="pl-c1">shell</span> <span class="pl-k">=</span> <span class="pl-smi">adapters</span>.<span class="pl-smi">Shell</span>;
 
@@ -243,7 +243,7 @@ calls easy to make.</p>
     <span class="pl-v">this</span>.<span class="pl-en">respond</span>(<span class="pl-sr"><span class="pl-pds">/</span>status<span class="pl-pds">/</span></span>, <span class="pl-v">this</span>.<span class="pl-smi">getStatus</span>);
     <span class="pl-v">this</span>.<span class="pl-en">listen</span>(<span class="pl-sr"><span class="pl-pds">/</span><span class="pl-k">^</span>status (http:<span class="pl-cce">\/\/</span><span class="pl-c1">\S</span><span class="pl-k">+</span>)<span class="pl-pds">/</span></span>, <span class="pl-v">this</span>.<span class="pl-smi">getStatus</span>);
 
-    <span class="pl-v">this</span>.<span class="pl-en">listen</span>(<span class="pl-smi">m</span> <span class="pl-k">=&gt;</span> m <span class="pl-k">===</span> <span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>, <span class="pl-v">this</span>.<span class="pl-smi">getStatus</span>);
+    <span class="pl-v">this</span>.<span class="pl-en">listen</span>(<span class="pl-smi">m</span> <span class="pl-k">=&gt;</span> <span class="pl-smi">m</span>.<span class="pl-c1">text</span> <span class="pl-k">===</span> <span class="pl-s"><span class="pl-pds">'</span>status<span class="pl-pds">'</span></span>, <span class="pl-v">this</span>.<span class="pl-smi">getStatus</span>);
   }
 
   <span class="pl-k">async</span> <span class="pl-en">getStatus</span> (<span class="pl-smi">match</span>, <span class="pl-smi">message</span>) {
