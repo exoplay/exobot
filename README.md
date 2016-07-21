@@ -313,6 +313,12 @@ export default class ChatServiceAdapter extends Adapter {
 
     return this.receive({ user, text, channel });
   }
+
+  // This is useful for chat services where names aren't unique, for use by
+  // plugins where uniqueness matters (like Permissions.)
+  getUserIdByUserName (name) {
+    return this.service.getUserByName(name).id;
+  }
 }
 
 ```
