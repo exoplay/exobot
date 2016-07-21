@@ -75,4 +75,9 @@ export default class Adapter {
   pong () {
     console.log('Ping received, this.pong() not implemented.');
   }
+
+  getUserIdByUserName (name) {
+    console.log('getUserIdByUserName not implemented by this adapter.');
+    return name;
+  }
 }

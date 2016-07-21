@@ -88,6 +88,7 @@ export class Exobot {
   }
 
   send (message) {
+    if (!message.text) { return; }
     const adapter = this.adapters[message.adapter];
 
     if (!adapter) {
