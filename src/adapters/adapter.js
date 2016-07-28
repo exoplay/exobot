@@ -21,6 +21,9 @@ export default class Adapter {
 
   register (bot) {
     if (!bot) { throw new Error('No bot passed to register; fatal.'); }
+    if (!this.name) {
+      throw new Error('This adapter has no `name` property; some plugins will not work.');
+    }
 
     this.bot = bot;
 

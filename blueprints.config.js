@@ -27,7 +27,10 @@ module.exports = [{
             'es2015-native-modules',
           ],
           plugins: [
+            'syntax-decorators',
             'syntax-class-properties',
+            'transform-decorators-legacy',
+            'transform-decorators',
             'transform-class-properties',
             'transform-async-to-generator',
             'transform-object-rest-spread',

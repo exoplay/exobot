@@ -4,6 +4,8 @@ import superagent from 'superagent';
 import sapp from 'superagent-promise-plugin';
 sapp.Promise = Promise;
 
+import { Permissions } from './plugins/plugins';
+
 const http = sapp.patch(superagent);
 
 import { DB } from './db';
@@ -31,7 +33,15 @@ export class Exobot {
   }
 
   initPlugins = (plugins=[]) => {
-    plugins.forEach(p => this.addPlugin(p));
+    plugins.forEach(p => {
+      this.addPlugin(p);
+
+      // if the Permissions plugin isn't initialized, we can optimize later on
+      // by not waiting for DB initialization and permissions checking.
+      if (p instanceof Permissions) {
+        this.usePermissions = true;
+      }
+    });
   }
 
   initLog = (logLevel) => {
@@ -72,6 +82,12 @@ export class Exobot {
   }
 
   addAdapter (adapter) {
+    const name = adapter.name;
+
+    if (this.getAdapterByName(name)) {
+      this.log.warning(`Multiple "${name}" adapters were initialized.`);
+    }
+
     adapter.register(this);
     this.adapters[adapter.id] = adapter;
   }
@@ -89,7 +105,7 @@ export class Exobot {
 
   send (message) {
     if (!message.text) { return; }
-    const adapter = this.adapters[message.adapter];
+    const adapter = this.getAdapterByMessage(message);
 
     if (!adapter) {
       this.bot.log.warning(`Message sent with invalid adapter: ${message.adapter}`);
@@ -97,6 +113,17 @@ export class Exobot {
     }
 
     adapter.send(message);
+  }
+
+  getAdapterByMessage (message) {
+    return this.adapters[message.adapter];
+  }
+
+  getAdapterByName (name) {
+    return Object
+            .keys(this.adapters)
+            .map(id => this.adapters[id])
+            .find(a => a.name.toLowerCase() === name.toLowerCase());
   }
 }
 

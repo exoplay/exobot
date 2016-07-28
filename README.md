@@ -120,18 +120,20 @@ and `help` plugins, but building your own is easy. Some examples:
 * [giphy, for gif search](https://github.com/exoplay/exobot-plugin-giphy)
 * [points, for fun](https://github.com/exoplay/exobot-plugin-points)
 
+The [ES2017 decorators proposal](https://github.com/wycats/javascript-decorators)
+is used to hook commands to validation functions or regexes, to assign permission
+groups, and to provide help text.
+
 ### An Example Plugin
 
 ```javascript
-import { ChatPlugin } from '@exoplay/exobot';
+import { ChatPlugin, respond, help } from '@exoplay/exobot';
 
 export default class Ping extends ChatPlugin {
-  help = 'Says "pong" when you send it "ping"';
+  static name = 'ping';
 
-  register (bot) {
-    this.respond(/ping/, this.pong);
-  }
-
+  @help('Says "pong" when you send it "ping"');
+  @respond(/^ping$/);
   pong (match, message) {
     return 'pong';
   }
@@ -152,6 +154,8 @@ initialized with _instances_ of plugins, this is where you would pass in
 configuration options, such as:
 
 ```javascript
+import { ChatPlugin, respond, help } from '@exoplay/exobot';
+
 class StatusPlugin extends ChatPlugin {
   constructor (options) {
     super(options);
@@ -160,6 +164,8 @@ class StatusPlugin extends ChatPlugin {
 
   //...
 
+  @help('Gets the status of the configured endpoint.');
+  @respond(m => m.text === 'status');
   async getStatus () {
     const res = await this.http.get(this.endpoint);
     return res.statusCode;
@@ -173,9 +179,13 @@ in the options we need later on.
 
 Next, when the bot instance begins listening, the plugin's `register` method is
 called, with the `bot` instace passed in. Note that the constructor doesn't have
-the bot yet - it doesn't exist until `register`.
+the bot yet - it doesn't exist until `register`, fired next.
 
-`register` is also where you register `listen` and `respond` commands. `listen`
+You'll want to give the plugin a `static` `name` property - thi is used if you
+use the permissions plugin to restrict access to commands.
+
+`listen` and `respond` are decorators that take a function, and fire the method
+when a match is found. `listen`
 and `respond` are the most important parts of your chat plugin - these allow the
 bot to interact with chat. Each can take either a regex _or_ a function, and if
 a match is found (or, if a function, if it is truthy), it will fire the
@@ -188,15 +198,26 @@ the regex's `exec` response or the function return value, and a `Message`
 object, which contains the original message, user, and whether the message is a
 whisper.
 
-You can optionally add a `help` property, which exobot's `help` plugin uses to
+You can optionally add a `help` decorator, which exobot's `help` plugin uses to
 explain to useres how the plugin works.
+
+You can also optionally add a `permissionsGroup`, which you can then use with
+exobot's `Permissions` plugin to restrict access to certain commands. In the
+following case, you can give access to `status.get` to groups, and if you deny
+access by default in configuration, only users in the group with access to
+`status.get` can use the command. (The bot will ignore the command from
+everyone else.)
 
 Finally, the bot also exposes `bot.http`, which is a promise-ified
 [superagent](https://visionmedia.github.io/superagent/) wrapper, to make http
 calls easy to make.
 
 ```javascript
+import { ChatPlugin, respond, listen, permissionsGroup, help } from '@exoplay/exobot';
+
 class StatusPlugin extends ChatPlugin {
+  static name = 'Status';
+
   help = [
     'Get the status of an http endpoint. Responds to `status` or listens to',
     'status <http://whatever.com>.'
@@ -216,10 +237,14 @@ class StatusPlugin extends ChatPlugin {
 
     this.respond(/status/, this.getStatus);
     this.listen(/^status (http:\/\/\S+)/, this.getStatus);
-
     this.listen(m => m.text === 'status', this.getStatus);
   }
 
+
+  @respond(/^status$/);
+  @listen(/^status (http:\/\/\S+)/);
+  @listen(m => m.text === 'status');
+  @permissionsGroup('get');
   async getStatus (match, message) {
     let endpoint = this.endpoint;
 

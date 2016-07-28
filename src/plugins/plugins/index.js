@@ -1,2 +1,3 @@
-export { default as Greetings } from './greetings';
-export { default as Help } from './help';
+export { Greetings } from './greetings';
+export { Help } from './help';
+export { Permissions } from './permissions';

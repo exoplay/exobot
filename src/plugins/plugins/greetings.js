@@ -1,4 +1,4 @@
-import ChatPlugin from '../chat';
+import { ChatPlugin, listen, help, permissionGroup } from '../chat';
 
 const GREETINGS = [
   'hi',
@@ -18,28 +18,23 @@ const FAREWELLS = [
   'cya',
 ];
 
-const regex = (botname, list) => new RegExp(`^(${list.join('|')})[,\\s@]*${botname}`, 'i');
+const shouldGreet = (m) => GREETINGS.includes(m.text.toLowerCase());
+const shouldFarewell = (m) => FAREWELLS.includes(m.text.toLowerCase());
 
-export default class GreetingPlugin extends ChatPlugin {
-  help = 'Greetings: says "hi" back. Say "hi <botname>" for a response.';
+export class Greetings extends ChatPlugin {
+  name = 'greeting';
 
-  register (bot) {
-    super.register(...arguments);
-
-    this.listen(regex(bot.name, GREETINGS), this.greeting);
-    this.listen((m) => GREETINGS.includes(m.text.toLowerCase()), this.greeting);
-    this.respond((m) => GREETINGS.includes(m.text.toLowerCase()), this.greeting);
-
-    this.listen(regex(bot.name, FAREWELLS), this.farewell);
-    this.listen((m) => FAREWELLS.includes(m.text.toLowerCase()), this.farewell);
-    this.respond((m) => FAREWELLS.includes(m.text.toLowerCase()), this.farewell);
-  }
-
+  @help('Greets you back when you greet the channel.');
+  @permissionGroup('greetings');
+  @listen(shouldGreet)
   greeting (_, message) {
     const randomGreeting = GREETINGS[parseInt(Math.random() * GREETINGS.length)];
     return `${randomGreeting}, ${message.user.name}!`;
   }
 
+  @help('Says goodbye when you do.');
+  @permissionGroup('greetings');
+  @listen(shouldFarewell)
   farewell (_, message) {
     const randomFarewell = FAREWELLS[parseInt(Math.random() * FAREWELLS.length)];
     return `${randomFarewell}, ${message.user.name}!`;

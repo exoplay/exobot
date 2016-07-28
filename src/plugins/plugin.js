@@ -9,11 +9,19 @@ export default class Plugin {
   register (bot) {
     if (!bot) { throw new Error('No bot passed to register; fatal.'); }
 
+    if (!this.name) {
+      throw new Error(
+        'This plugin has a missing `name` property; some functionality will not work.'
+      );
+    }
+
     this.bot = bot;
   }
 
   listen () {
-    if (!this.bot) { throw new Error('No bot to listen on; fatal.'); }
+    if (!this.bot) {
+      throw new Error('No bot to listen on; fatal.');
+    }
   }
 
   async database (name, defaultValue) {

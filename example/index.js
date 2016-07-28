@@ -1,13 +1,19 @@
+require('babel-polyfill');
+
 const Log = require('log');
 
 const { Exobot, adapters, plugins } = require('../exobot');
-const { Help, Greetings, Points, DBDump, Giphy } = plugins;
+const { Help, Greetings, Permissions } = plugins;
 
-const BOT_ALIAS = '!e';
-const BOT_NAME = 'exobot';
-const HTTP_LISTENER_PORT = process.env.PORT || '8080';
-const LOG_LEVEL = process.env.EXOBOT_LOG_LEVEL || Log.INFO;
-const GIPHY_API_KEY = process.env.GIPHY_API_KEY;
+
+const {
+  BOT_ALIAS = '!e',
+  BOT_NAME = 'exobot',
+  HTTP_LISTENER_PORT = '8080',
+  LOG_LEVEL = Log.INFO,
+  ADMIN_PASSWORD = 'wuttup',
+  ENCRYPTION_KEY = 'bananasaurus',
+} = process.env;
 
 const shell = adapters.Shell;
 
@@ -19,13 +25,14 @@ const bot = new Exobot(BOT_NAME, {
   plugins: [
     new Help(),
     new Greetings(),
-    new Points(),
-    new DBDump(),
-    new Giphy({ apiKey: GIPHY_API_KEY }),
+    new Permissions({
+      adminPassword: ADMIN_PASSWORD,
+    }),
   ],
   port: HTTP_LISTENER_PORT,
   logLevel: LOG_LEVEL,
-  key: 'bananasaurus',
+  key: ENCRYPTION_KEY,
+  requirePermisisons: true,
 });
 
 module.exports = bot;

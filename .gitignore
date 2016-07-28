@@ -6,3 +6,4 @@ start.sh
 bin/*
 build/
 example/
+data

@@ -1,16 +1,29 @@
-import ChatPlugin from '../chat';
+import { ChatPlugin, respond, help, permissionGroup } from '../chat';
 
-export default class HelpPlugin extends ChatPlugin {
-  help = 'Help: Explains commands. Say "<botname> help" for information.';
+export class Help extends ChatPlugin {
+  name = 'help';
 
-  constructor () {
-    super(...arguments);
-    this.respond(/^help$/i, this.pluginHelp);
+  @help('/help explains commands.');
+  @permissionGroup('help');
+  @respond(/^help$/i);
+  pluginHelp () {
+    return this.bot.plugins
+                    .filter(p => p.help && p.help.length > 0)
+                    .map(p => p.helpText().join('\n'), [])
+                    .join('\n');
   }
 
-  pluginHelp = () => {
+  @help('/help <search> finds information about a specific command.');
+  @permissionGroup('help');
+  @respond(/^help (\w+)$/i);
+  pluginHelpSearch ([, search]) {
     return this.bot.plugins
-                    .filter(p => p.help)
-                    .map(p => p.help, []).join('\n');
+                    .filter(p => p.help && p.help.length > 0)
+                    .map(p => {
+                      return p.helpText().filter(t => {
+                        return t.toLowerCase().indexOf(search.toLowerCase()) > -1;
+                      }).join('\n');
+                    }, [])
+                    .join('\n');
   }
 }

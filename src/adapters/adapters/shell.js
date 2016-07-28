@@ -13,6 +13,8 @@ const EXIT_COMMANDS = [
 ];
 
 export default class ShellAdapter extends Adapter {
+  name = 'shell';
+
   constructor () {
     super();
     this.rl = readline.createInterface({
@@ -41,5 +43,9 @@ export default class ShellAdapter extends Adapter {
     super.register(bot);
     this.prompt();
     this.status = Adapter.STATUS.CONNECTED;
+  }
+
+  getUserIdByUserName () {
+    return 'shell';
   }
 }
