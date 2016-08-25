@@ -127,12 +127,13 @@ groups, and to provide help text.
 ### An Example Plugin
 
 ```javascript
-import { ChatPlugin, respond, help } from '@exoplay/exobot';
+import { ChatPlugin, respond, help, permissionGroup } from '@exoplay/exobot';
 
 export default class Ping extends ChatPlugin {
   static name = 'ping';
 
   @help('Says "pong" when you send it "ping"');
+  @permissionGroup('ping');
   @respond(/^ping$/);
   pong (match, message) {
     return 'pong';
@@ -154,7 +155,7 @@ initialized with _instances_ of plugins, this is where you would pass in
 configuration options, such as:
 
 ```javascript
-import { ChatPlugin, respond, help } from '@exoplay/exobot';
+import { ChatPlugin, respond, help, permissionGroup } from '@exoplay/exobot';
 
 class StatusPlugin extends ChatPlugin {
   constructor (options) {
@@ -165,6 +166,7 @@ class StatusPlugin extends ChatPlugin {
   //...
 
   @help('Gets the status of the configured endpoint.');
+  @permissionGroup('get');
   @respond(m => m.text === 'status');
   async getStatus () {
     const res = await this.http.get(this.endpoint);
@@ -201,7 +203,7 @@ whisper.
 You can optionally add a `help` decorator, which exobot's `help` plugin uses to
 explain to useres how the plugin works.
 
-You can also optionally add a `permissionsGroup`, which you can then use with
+You should also add a `permissionsGroup`, which you can then use with
 exobot's `Permissions` plugin to restrict access to certain commands. In the
 following case, you can give access to `status.get` to groups, and if you deny
 access by default in configuration, only users in the group with access to
@@ -241,10 +243,11 @@ class StatusPlugin extends ChatPlugin {
   }
 
 
+  @help('use status or status <http> to get http status codes.');
+  @permissionsGroup('get');
   @respond(/^status$/);
   @listen(/^status (http:\/\/\S+)/);
   @listen(m => m.text === 'status');
-  @permissionsGroup('get');
   async getStatus (match, message) {
     let endpoint = this.endpoint;
 
