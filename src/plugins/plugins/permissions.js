@@ -124,7 +124,7 @@ export class Permissions extends ChatPlugin {
     'commands under that permissionGroup'
   );
   @permissionGroup('role-management');
-  @respond(/^permissions view group (\w+)$/i);
+  @respond(/^permissions view group (\S+)$/i);
   async viewGroup ([, group]/*, message*/) {
     await this.databaseInitialized();
 
