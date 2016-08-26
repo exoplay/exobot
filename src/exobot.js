@@ -19,6 +19,7 @@ export class Exobot {
     this.alias = options.alias;
     this.emitter = new Emitter();
     this.http = http;
+    this.requirePermissions = options.requirePermissions;
 
     this.initLog(options.logLevel || Log.WARNING);
     this.initAdapters(options.adapters);
