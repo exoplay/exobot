@@ -48,6 +48,13 @@ export class ChatPlugin extends Plugin {
       } else {
         return;
       }
+    } else {
+      // if it's a listener on a whisper, remove the botname first so it still
+      // works
+      const text = this.validateBotName(message);
+      if (text) {
+        message = new TextMessage({ ...message, text, direct: true });
+      }
     }
 
     if (validation.exec) { validation = this.validate(validation); }
