@@ -45,7 +45,6 @@ module.exports = [{
     plugins: [
       'production-loaders',
       'minify-and-treeshake',
-      'set-node-env',
       'abort-if-errors',
       'node-load-sourcemaps',
     ],
