@@ -9,14 +9,15 @@ An ES6+ chatbot. Requires Node ^6.2.
 * `npm install --save @exoplay/exobot`
 
 
-
 ## A Brief Example
 
 To start an exobot instance, you need to import the bot itself and initialize it
 with plugins and chat service adapters.
 
+Write a file at, say, `./src/exobot.js` Like the below example:
+
 ```javascript
-const { Exobot, adapters, plugins, LogLevels } = require('@exoplay/exobot');
+import { Exobot, adapters, plugins, LogLevels } from '@exoplay/exobot';
 const { Help, Greetings } = plugins;
 
 const BOT_ALIAS = '!e';
@@ -40,8 +41,21 @@ const bot = new Exobot(BOT_NAME, {
 module.exports = bot;
 ```
 
+Then, edit your `package.json` to point `main` at `exobot.js` (or whatever your
+main file is called), like:
+
 ```
-$ node index.js
+{
+  //...
+  "main": "exobot.js"
+}
+```
+
+So that the build can find it. Then, build and run it!
+
+```
+$ exobot-build
+$ node exobot.js
 > Chat: hi, exobot
 > exobot: hi, shell!
 ```
@@ -49,13 +63,13 @@ $ node index.js
 
 What did we do there?
 
-* Created a file named `index.js`
+* Created a file named `./src/exobot.js`
 * Imported the `Exobot` class, service adapters, and plugins
 * Initialized a new bot, passing in its name, configured service adapters and
   plugins
+* Built the bot to turn ES7+ into node-compatible ES6
 * Started the bot
 * Ran `node index.js` and interacted with the bot
-
 
 
 ## Getting started
@@ -72,10 +86,13 @@ respond to messages that trigger plugins.
   as its own package - but this will create a `package.json` file that contains
   your dependencies.)
 3. Run `npm install --save @exoplay/exobot` to install the chatbot.
-4. Copy the example above to `index.js`.
-5. Run `node index.js`. Chat with yourself for a while, then read on to learn
+4. Add [npm scripts](https://docs.npmjs.com/misc/scripts)
+  such as `"build": "exobot-build"` and `"watch": "exobot-build --watch"` to
+  your package.json to get access to the bot building commands
+4. Copy the example above to `./src/exobot.js`.
+5. Build the bot with `npm run build`
+5. Run `node exobot.js`. Chat with yourself for a while, then read on to learn
   how to configure your chatbot, or even build your own plugins and adapters.
-
 
 
 ## Configuration

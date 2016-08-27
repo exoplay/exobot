@@ -1,9 +1,11 @@
+const config = require(`${process.cwd()}/package.json`);
+
 module.exports = [{
-  name: 'exobot',
+  name: config.name,
   webpack: {
     devtool: 'source-map',
     entry: {
-      exobot: './src/exobot.js',
+      exobot: `./src/${config.main}`,
     },
     output: {
       library: '[name].js',

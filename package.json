@@ -22,12 +22,12 @@
   },
   "homepage": "https://github.com/exoplay/exobot#readme",
   "devDependencies": {
+  },
+  "dependencies": {
     "@r/build": "git://github.com/ajacksified/node-build#679c3f3d47c0916237d55128ece4cc817b489ef8",
     "babel-plugin-syntax-decorators": "^6.8.0",
     "babel-plugin-transform-decorators": "^6.8.0",
-    "babel-plugin-transform-decorators-legacy": "^1.3.4"
-  },
-  "dependencies": {
+    "babel-plugin-transform-decorators-legacy": "^1.3.4",
     "cryptr": "~2.0.0",
     "eventemitter3": "~1.2.0",
     "fetch-ponyfill": "~2.0.1",
@@ -42,5 +42,8 @@
   },
   "peerDependencies": {
     "babel-polyfill": "~6.13.0"
+  },
+  "bin": {
+    "exobot-build": "./bin/build.js"
   }
 }
