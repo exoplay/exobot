@@ -2,6 +2,7 @@ import { ChatPlugin, respond, help, permissionGroup } from '../chat';
 
 export class Permissions extends ChatPlugin {
   name = 'permissions';
+  defaultDatabase = { permissions: {} };
 
   static nameToId = (name) => {
     return name.replace(/[^\w]/g, '').toLowerCase();
@@ -17,7 +18,6 @@ export class Permissions extends ChatPlugin {
 
   register (bot) {
     super.register(bot);
-    this.database('permissions', { });
 
     if (!this.adminPassword) {
       bot.log.error('No adminPassword provided to Permissions plugin');

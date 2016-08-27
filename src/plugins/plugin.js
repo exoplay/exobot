@@ -16,6 +16,7 @@ export default class Plugin {
     }
 
     this.bot = bot;
+    this.database();
   }
 
   listen () {
@@ -24,12 +25,17 @@ export default class Plugin {
     }
   }
 
-  async database (name, defaultValue) {
-    await this.databaseInitialized();
-    const val = this.bot.db.get(name).value();
+  async database () {
+    if (this.defaultDatabase) {
+      await this.databaseInitialized();
 
-    if (typeof val === 'undefined') {
-      this.bot.db.set(name, defaultValue).value();
+      Object.keys(this.defaultDatabase).forEach(name => {
+        const val = this.bot.db.get(name).value();
+
+        if (typeof val === 'undefined') {
+          this.bot.db.set(name, this.defaultDatabase[name]).value();
+        }
+      });
     }
   }
 
