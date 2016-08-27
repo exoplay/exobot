@@ -3,7 +3,6 @@
 node_modules/
 npm-debug.log
 start.sh
-bin/*
 build/
 example/
 data
