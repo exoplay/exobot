@@ -86,7 +86,7 @@ export class ChatPlugin extends Plugin {
     const roles = this.bot.db.get(`permissions.users.${userId}.roles`).value();
 
     // if user has `admin` role, allow it
-    if (roles.admin) { return true; }
+    if (roles && roles.admin) { return true; }
 
     // get roles assigned to the command group
     const groups = this.bot.db.get(`permissions.groups.${commandPermissionGroup}`).value();
