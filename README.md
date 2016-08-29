@@ -12,17 +12,17 @@ An ES6+ chatbot. Requires Node ^6.2.
 ## A Brief Example
 
 To start an exobot instance, you need to import the bot itself and initialize it
-with plugins and chat service adapters.
-
-Write a file at, say, `./src/exobot.js` Like the below example:
+with plugins and chat service adapters. Here's an example:
 
 ```javascript
 import { Exobot, adapters, plugins, LogLevels } from '@exoplay/exobot';
+import { Points } from '@exoplay/exobot-plugin-points';
+
 const { Help, Greetings } = plugins;
 
 const BOT_ALIAS = '!e';
 const BOT_NAME = 'exobot';
-const LOG_LEVEL = process.env.EXOBOT_LOG_LEVEL || LogLevels.INFO;
+const LOG_LEVEL = LogLevels.INFO;
 
 const shell = adapters.Shell;
 
@@ -34,6 +34,7 @@ const bot = new Exobot(BOT_NAME, {
   plugins: [
     new Help(),
     new Greetings(),
+    new Points(),
   ],
   logLevel: LOG_LEVEL,
 });
@@ -41,23 +42,13 @@ const bot = new Exobot(BOT_NAME, {
 module.exports = bot;
 ```
 
-Then, edit your `package.json` to point `main` at `exobot.js` (or whatever your
-main file is called), like:
-
 ```
-{
-  //...
-  "main": "exobot.js"
-}
-```
-
-So that the build can find it. Then, build and run it!
-
-```
-$ exobot-build
+$ npm run build
 $ node exobot.js
-> Chat: hi, exobot
+> Chat: hi
 > exobot: hi, shell!
+> Chat: exobot++ for being awesome
+> exobot: exobot has 1337 points, 1336 of which are for being awesome
 ```
 
 
@@ -282,6 +273,10 @@ class StatusPlugin extends ChatPlugin {
 You can also build other types of plugins: `EventPlugin`, `HTTPPlugin`, or build
 your own class of plugin with the `Plugin` class. Documentation to come someday.
 
+Exobot exports a handy scripts for testing your plugins: `exobot-try`. By either
+installing exobot globally (`npm install -g @exoplay/exobot`) or adding a script
+to your package.json (`"try": "exobot-try"`), exobot will fire up a simple bot
+with a shell adapter so you can test your plugin.
 
 
 ## Building Adapters
