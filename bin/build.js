@@ -10,7 +10,7 @@ if (process.argv.length > 2) {
   }
 }
 
-const build = spawn('blueprints', buildArgs);
+const build = spawn('npm', ['run', 'blueprints', '--', ...buildArgs]);
 
 build.stdout.on('data', (data) => {
   console.log(data.toString());
