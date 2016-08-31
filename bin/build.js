@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const spawn = require('child_process').spawn;
+const spawn = require('cross-spawn');
 const blueprintsPath = `${__dirname}/blueprints.config.js`;
 
 const buildArgs = ['-b', blueprintsPath, '-p'];
