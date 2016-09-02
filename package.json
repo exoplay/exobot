@@ -1,11 +1,11 @@
 {
   "name": "@exoplay/exobot",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "a chatbox",
   "main": "exobot.js",
   "scripts": {
-    "build": "exobot-build",
-    "watch": "exobot-build -w",
+    "build": "node ./bin/build.js",
+    "watch": "node ./bin/build.js -w",
     "blueprints": "blueprints"
   },
   "repository": {
