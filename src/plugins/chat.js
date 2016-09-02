@@ -20,6 +20,7 @@ export class ChatPlugin extends Plugin {
   }
 
   register (bot) {
+    super.register(bot);
     this.bot = bot;
     this.botNameRegex = new RegExp(`^(?:(?:@?${bot.name}|${bot.alias})[,\\s:.-]*)(.+)`, 'i');
 
