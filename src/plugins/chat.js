@@ -41,43 +41,47 @@ export class ChatPlugin extends Plugin {
   }
 
   async process (validation, response, fnName, message, isResponder=false) {
-    if (isResponder) {
-      const text = this.validateBotName(message);
-
-      if (text) {
-        message = new TextMessage({ ...message, text, direct: true });
-      } else {
-        return;
-      }
-    } else {
-      // if it's a listener on a whisper, remove the botname first so it still
-      // works
-      const text = this.validateBotName(message);
-      if (text) {
-        message = new TextMessage({ ...message, text, direct: true });
-      }
-    }
-
-    if (validation.exec) { validation = this.validate(validation); }
-
-    const res = validation(message);
-
-    if (res) {
-      if (await this.checkPermissions(message.user.id, this[fnName].permissionGroup)) {
-        const text = response.bind(this)(res, message);
+    try {
+      if (isResponder) {
+        const text = this.validateBotName(message);
 
         if (text) {
-          if (text instanceof Promise) {
-            text.then(t => {
-              const newMessage = new TextMessage({ ...message, text: t });
+          message = new TextMessage({ ...message, text, direct: true });
+        } else {
+          return;
+        }
+      } else {
+        // if it's a listener on a whisper, remove the botname first so it still
+        // works
+        const text = this.validateBotName(message);
+        if (text) {
+          message = new TextMessage({ ...message, text, direct: true });
+        }
+      }
+
+      if (validation.exec) { validation = this.validate(validation); }
+
+      const res = validation(message);
+
+      if (res) {
+        if (await this.checkPermissions(message.user.id, this[fnName].permissionGroup)) {
+          const text = response.bind(this)(res, message);
+
+          if (text) {
+            if (text instanceof Promise) {
+              text.then(t => {
+                const newMessage = new TextMessage({ ...message, text: t });
+                this.bot.send(newMessage);
+              });
+            } else {
+              const newMessage = new TextMessage({ ...message, text });
               this.bot.send(newMessage);
-            });
-          } else {
-            const newMessage = new TextMessage({ ...message, text });
-            this.bot.send(newMessage);
+            }
           }
         }
       }
+    } catch (e) {
+      this.bot.log.warning(e);
     }
   }
 
@@ -105,6 +109,10 @@ export class ChatPlugin extends Plugin {
       if (!this.bot.requirePermissions) {
         return true;
       }
+
+      // otherwise, if there are no groups, and we're not an admin, return
+      // false.
+      return false;
     }
     // if command is in `public`, allow it
     if (groups.public) { return true; }
