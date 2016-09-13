@@ -1,5 +1,3 @@
-import { v4 as uuid } from 'node-uuid';
-
 import TextMessage from '../messages/text';
 import PresenceMessage from '../messages/presence';
 
@@ -15,7 +13,6 @@ export default class Adapter {
 
   constructor (options={}) {
     this.options = options;
-    this.id = options.id || uuid();
     this.status = Adapter.STATUS.UNINITIALIZED;
   }
 
@@ -41,7 +38,7 @@ export default class Adapter {
       return;
     }
 
-    const message = new TextMessage({ user, text, channel, whisper, adapter: this.id });
+    const message = new TextMessage({ user, text, channel, whisper, adapter: this.name });
     this.bot.emitter.emit('receive-message', message);
   }
 
@@ -59,7 +56,7 @@ export default class Adapter {
     const message = new PresenceMessage({
       user,
       channel,
-      adapter: this.id,
+      adapter: this.name,
       type: PresenceMessage.TYPES.ENTER,
     });
 
@@ -70,7 +67,7 @@ export default class Adapter {
     const message = new PresenceMessage({
       user,
       channel,
-      adapter: this.id,
+      adapter: this.name,
       type: PresenceMessage.TYPES.LEAVE,
     });
 

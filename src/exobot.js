@@ -22,11 +22,13 @@ export class Exobot {
     this.requirePermissions = options.requirePermissions;
 
     this.initLog(options.logLevel || Log.WARNING);
+    const dbPath = options.dbPath || `./data/${name}.json`;
+    this.initDB(options.key, dbPath, options.readFile, options.writeFile);
+    this.initUsers();
+
     this.initAdapters(options.adapters);
     this.initPlugins(options.plugins);
 
-    const dbPath = options.dbPath || `./data/${name}.json`;
-    this.initDB(options.key, dbPath, options.readFile, options.writeFile);
   }
 
   initAdapters = (adapters=[]) => {
@@ -73,6 +75,25 @@ export class Exobot {
     }, this.log.critical);
   }
 
+  async initUsers () {
+    await this.databaseInitialized();
+    this.users = this.db.get('exobot-users').value();
+    if (this.users) {
+      return;
+    }
+    this.db.set('exobot-users', {botUsers: {}}).value();
+    this.users = this.db.get('exobot-users').value();
+  }
+
+  async databaseInitialized () {
+    if (this.db) {
+      return true;
+    }
+    return new Promise((resolve) => {
+      this.emitter.on('dbLoaded', resolve);
+    });
+  }
+
   logProcess = () => {
     this.log.debug(process.memoryUsage(), process.cpuUsage());
   }
@@ -90,7 +111,7 @@ export class Exobot {
     }
 
     adapter.register(this);
-    this.adapters[adapter.id] = adapter;
+    this.adapters[adapter.name] = adapter;
   }
 
   prependNameForWhisper (text) {

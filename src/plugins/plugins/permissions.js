@@ -5,7 +5,7 @@ export class Permissions extends ChatPlugin {
   defaultDatabase = { permissions: {} };
 
   static nameToId = (name) => {
-    return name.replace(/[^\w]/g, '').toLowerCase();
+    return name.replace(/[^\w-]/g, '').toLowerCase();
   }
 
   constructor (options) {
@@ -47,9 +47,9 @@ export class Permissions extends ChatPlugin {
     await this.databaseInitialized();
 
     const userId = Permissions.nameToId(
-      this.bot.adapters[message.adapter].getUserIdByUserName(name)
+      await this.bot.adapters[message.adapter].getUserIdByUserName(name)
     );
-
+    console.log(userId);
     if (userId) {
       this.bot.db.set(`permissions.users.${userId}.roles.${role}`, true).value();
       this.bot.db.write();
@@ -64,7 +64,7 @@ export class Permissions extends ChatPlugin {
     await this.databaseInitialized();
 
     const userId = Permissions.nameToId(
-      this.bot.adapters[message.adapter].getUserIdByUserName(name)
+      await this.bot.adapters[message.adapter].getUserIdByUserName(name)
     );
 
     if (userId) {
@@ -81,7 +81,7 @@ export class Permissions extends ChatPlugin {
     await this.databaseInitialized();
 
     const userId = Permissions.nameToId(
-      this.bot.adapters[message.adapter].getUserIdByUserName(name)
+      await this.bot.adapters[message.adapter].getUserIdByUserName(name)
     );
 
     if (userId) {
