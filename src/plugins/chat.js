@@ -44,19 +44,16 @@ export class ChatPlugin extends Plugin {
     try {
       if (isResponder) {
         const text = this.validateBotName(message);
+        if (!text) { return; }
 
-        if (text) {
-          message = new TextMessage({ ...message, text, direct: true });
-        } else {
-          return;
-        }
+        message = new TextMessage({ ...message, text, direct: true });
       } else {
         // if it's a listener on a whisper, remove the botname first so it still
         // works
         const text = this.validateBotName(message);
-        if (text) {
-          message = new TextMessage({ ...message, text, direct: true });
-        }
+        if (!text) { return; }
+
+        message = new TextMessage({ ...message, text, direct: true });
       }
 
       if (validation.exec) { validation = this.validate(validation); }
@@ -66,17 +63,16 @@ export class ChatPlugin extends Plugin {
       if (res) {
         if (await this.checkPermissions(message.user.id, this[fnName].permissionGroup)) {
           const text = response.bind(this)(res, message);
+          if (!text) { return; }
 
-          if (text) {
-            if (text instanceof Promise) {
-              text.then(t => {
-                const newMessage = new TextMessage({ ...message, text: t });
-                this.bot.send(newMessage);
-              });
-            } else {
-              const newMessage = new TextMessage({ ...message, text });
+          if (text instanceof Promise) {
+            text.then(t => {
+              const newMessage = new TextMessage({ ...message, text: t });
               this.bot.send(newMessage);
-            }
+            });
+          } else {
+            const newMessage = new TextMessage({ ...message, text });
+            this.bot.send(newMessage);
           }
         }
       }

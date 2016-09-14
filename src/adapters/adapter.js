@@ -36,11 +36,21 @@ export default class Adapter {
   }
 
   receive ({ user, text, channel, whisper }) {
+    if (!text) {
+      this.bot.log.warning('Message received with undefined text.');
+      return;
+    }
+
     const message = new TextMessage({ user, text, channel, whisper, adapter: this.id });
     this.bot.emitter.emit('receive-message', message);
   }
 
   receiveWhisper ({ user, text, channel }) {
+    if (!text) {
+      this.bot.log.warning('Message received with undefined text.');
+      return;
+    }
+
     text = this.bot.prependNameForWhisper(text);
     this.receive({ user, text, channel, whisper: true });
   }
