@@ -1,4 +1,5 @@
 import { ChatPlugin, respond, help, permissionGroup } from '../chat';
+import { v4 as uuid } from 'node-uuid';
 
 export class Permissions extends ChatPlugin {
   name = 'permissions';
@@ -33,7 +34,7 @@ export class Permissions extends ChatPlugin {
     // Validate the password - if there is one.
     if (this.adminPassword && adminPassword === this.adminPassword) {
       const id = Permissions.nameToId(message.user.id);
-      this.bot.db.set(`permissions.users.${id}.roles.admin`, true).value();
+      this.bot.users.botUsers[id].roles.admin = true;
       this.bot.db.write();
       return 'User authorized as admin.';
     }
@@ -45,13 +46,15 @@ export class Permissions extends ChatPlugin {
   async addRoleToUser ([match, name, role], message) {
     role = Permissions.nameToId(role);
     await this.databaseInitialized();
-
-    const userId = Permissions.nameToId(
-      await this.bot.adapters[message.adapter].getUserIdByUserName(name)
-    );
-    console.log(userId);
+    let userIdDirty;
+    try {
+      userIdDirty = await this.bot.adapters[message.adapter].getUserIdByUserName(name);
+    } catch (err) {
+      console.log(err);
+    }
+    const userId = Permissions.nameToId(userIdDirty);
     if (userId) {
-      this.bot.db.set(`permissions.users.${userId}.roles.${role}`, true).value();
+      this.bot.users.botUsers[userId].roles[role] = true;
       this.bot.db.write();
       return `${name} added to role ${role}.`;
     }
@@ -62,13 +65,15 @@ export class Permissions extends ChatPlugin {
   @respond(/^permissions view user (\w+)$/i);
   async viewUser ([match, name], message) {
     await this.databaseInitialized();
-
-    const userId = Permissions.nameToId(
-      await this.bot.adapters[message.adapter].getUserIdByUserName(name)
-    );
-
+    let userIdDirty;
+    try {
+      userIdDirty = await this.bot.adapters[message.adapter].getUserIdByUserName(name);
+    } catch (err) {
+      console.log(err);
+    }
+    const userId = Permissions.nameToId(userIdDirty);
     if (userId) {
-      const perms = Object.keys(this.bot.db.get(`permissions.users.${userId}.roles`).value());
+      const perms = Object.keys(this.bot.users.botUsers[userId].roles);
       return perms.join(', ');
     }
   }
@@ -79,15 +84,16 @@ export class Permissions extends ChatPlugin {
   async removeRoleFromUser ([match, name, role], message) {
     role = Permissions.nameToId(role);
     await this.databaseInitialized();
-
-    const userId = Permissions.nameToId(
-      await this.bot.adapters[message.adapter].getUserIdByUserName(name)
-    );
-
+    let userIdDirty;
+    try {
+      userIdDirty = await this.bot.adapters[message.adapter].getUserIdByUserName(name);
+    } catch (err) {
+      console.log(err);
+    }
+    const userId = Permissions.nameToId(userIdDirty);
     if (userId) {
-      const roles = this.bot.db.get(`permissions.users.${userId}.roles`).value();
+      const roles = this.bot.users.botUsers[userId].roles;
       delete roles[role];
-      this.bot.db.set(`permissions.users.${userId}.roles`, roles).value();
       this.bot.db.write();
       return `${name} removed from role ${role}.`;
     }
@@ -131,4 +137,26 @@ export class Permissions extends ChatPlugin {
     const perms = Object.keys(this.bot.db.get(`permissions.groups.${group}`).value());
     return perms.join(', ');
   }
+
+  @help('/login userIdString userToken');
+  @permissionGroup('public');
+  @respond(/^login\s*(\S+)?\s*(\S+)?$/i);
+  async multipleAdapterLogin ([, userId, token], message) {
+    await this.databaseInitialized();
+    if (userId && token) {
+      const user = this.bot.users.botUsers[userId];
+      if (user && user.id !== message.user.id) {
+        if (user.token === token) {
+          user.token = undefined;
+          return this.bot.mergeUsers(user, message.user);
+        }
+      }
+      return 'Wrong userId or token specified';
+    }
+    token = uuid().replace(/[-]/g, '').substring(0,15);
+    message.user.token = token;
+    return 'Please whisper this to the bot on the other adapter \n' +
+            `login ${message.user.id} ${token}`;
+  }
+
 }

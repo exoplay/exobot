@@ -6,4 +6,4 @@ start.sh
 build/
 example/
 data
-exobot*
+exobot.js*

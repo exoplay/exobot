@@ -1,6 +1,6 @@
 import Plugin from './plugin';
 import TextMessage from '../messages/text';
-import { intersection } from 'lodash/array';
+
 
 const DEFAULT_REGEXP = /.+/;
 
@@ -82,44 +82,7 @@ export class ChatPlugin extends Plugin {
   }
 
   async checkPermissions (userId, commandPermissionGroup) {
-    if (!this.bot.usePermissions) { return true; }
-
-    // special group for admin authorization - otherwise you could never auth
-    // in the first place when public commands are disabled
-    if (commandPermissionGroup === 'permissions.public') { return true; }
-
-    await this.databaseInitialized();
-
-    // get user's roles
-    const roles = this.bot.db.get(`permissions.users.${userId}.roles`).value();
-
-    // if user has `admin` role, allow it
-    if (roles && roles.admin) { return true; }
-
-    // get roles assigned to the command group
-    const groups = this.bot.db.get(`permissions.groups.${commandPermissionGroup}`).value();
-
-    // if there are no groups, and requirePermissions is false, allow it
-    // requirePermissions = false == (public by default)
-    if (!groups || !Object.keys(groups)) {
-      if (!this.bot.requirePermissions) {
-        return true;
-      }
-
-      // otherwise, if there are no groups, and we're not an admin, return
-      // false.
-      return false;
-    }
-    // if command is in `public`, allow it
-    if (groups.public) { return true; }
-
-    // check user's list of roles against list of groups that have the command
-    // if there's a match (user is in a group with the command), allow it
-    if (intersection(Object.keys(roles), Object.keys(groups)).length) {
-      return true;
-    }
-
-    return false;
+    return this.bot.checkPermissions(userId, commandPermissionGroup);
   }
 
   validate (regex) {

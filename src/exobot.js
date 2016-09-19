@@ -1,12 +1,15 @@
 import Emitter from 'eventemitter3';
 import Log from 'log';
-import superagent from 'superagent';
-import sapp from 'superagent-promise-plugin';
-sapp.Promise = Promise;
+//import superagent from 'superagent';
+//import sapp from 'superagent-promise-plugin';
+import { intersection, union } from 'lodash/array';
+import { merge } from 'lodash';
+
+///sapp.Promise = Promise;
 
 import { Permissions } from './plugins/plugins';
 
-const http = sapp.patch(superagent);
+//const http = sapp.patch(superagent);
 
 import { DB } from './db';
 
@@ -18,7 +21,7 @@ export class Exobot {
     this.name = name;
     this.alias = options.alias;
     this.emitter = new Emitter();
-    this.http = http;
+    //this.http = http;
     this.requirePermissions = options.requirePermissions;
 
     this.initLog(options.logLevel || Log.WARNING);
@@ -83,6 +86,77 @@ export class Exobot {
     }
     this.db.set('exobot-users', {botUsers: {}}).value();
     this.users = this.db.get('exobot-users').value();
+  }
+
+  mergeUsers (destUser, srcUser)
+  {
+    if (destUser && srcUser) {
+      merge(destUser.roles, srcUser.roles);
+      Object.keys(srcUser.adapters).map((adapter) => {
+        this.users[adapter][srcUser.adapters[adapter].userId].botID = destUser.id;
+      });
+      merge(destUser.adapters, srcUser.adapters);
+      delete this.users.botUsers[srcUser.id];
+      this.db.write();
+      return 'Login complete';
+    }
+
+  }
+
+  getUserRoles (userId) {
+    const user = this.users.botUsers[userId];
+    let roles = [];
+
+    if (user) {
+      Object.keys(user.adapters).map( (adapter) => {
+        this.adapters[adapter].getRolesForUser(user.adapters[adapter].userId).map( (role) => {
+          roles.push(role);
+        });
+      });
+      Object.keys(user.roles).map( (role) => {
+        roles.push(role);
+      });
+      return roles;
+    }
+  }
+
+  async checkPermissions (userId, commandPermissionGroup) {
+    if (!this.usePermissions) { return true; }
+
+    // special group for admin authorization - otherwise you could never auth
+    // in the first place when public commands are disabled
+    if (commandPermissionGroup === 'permissions.public') { return true; }
+
+    await this.databaseInitialized();
+
+    // get user's roles
+    const roles = this.getUserRoles(userId);
+    // if user has `admin` role, allow it
+    if (roles && roles.includes('admin')) { return true; }
+
+    // get roles assigned to the command group
+    const groups = this.db.get(`permissions.groups.${commandPermissionGroup}`).value();
+    // if there are no groups, and requirePermissions is false, allow it
+    // requirePermissions = false == (public by default)
+    if (!groups || !Object.keys(groups)) {
+      if (!this.requirePermissions) {
+        return true;
+      }
+
+      // otherwise, if there are no groups, and we're not an admin, return
+      // false.
+      return false;
+    }
+    // if command is in `public`, allow it
+    if (groups.public) { return true; }
+
+    // check user's list of roles against list of groups that have the command
+    // if there's a match (user is in a group with the command), allow it
+    if (intersection(roles, Object.keys(groups)).length) {
+      return true;
+    }
+
+    return false;
   }
 
   async databaseInitialized () {
