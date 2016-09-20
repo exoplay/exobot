@@ -14,15 +14,7 @@ export default class Adapter {
   constructor (options={}) {
     this.options = options;
     this.status = Adapter.STATUS.UNINITIALIZED;
-    if (options.roleMapping) {
-      try {
-        this.roleMapping = JSON.parse(options.roleMapping);
-      } catch (err) {
-        this.bot.log.warning(err);
-      }
-    } else {
-      this.roleMapping = [];
-    }
+    this.roleMapping = options.roleMapping;
   }
 
   register (bot) {
@@ -85,7 +77,7 @@ export default class Adapter {
   }
 
   send (message) {
-    console.log(message.text);
+    this.bot.log.warning(message.text);
   }
 
   ping () {
@@ -93,16 +85,16 @@ export default class Adapter {
   }
 
   pong () {
-    console.log('Ping received, this.pong() not implemented.');
+    this.bot.log.warning('Ping received, this.pong() not implemented.');
   }
 
   getUserIdByUserName (name) {
-    console.log('getUserIdByUserName not implemented by this adapter.');
+    this.bot.log.warning('getUserIdByUserName not implemented by this adapter.');
     return name;
   }
 
   getRoleIdByRoleName (name) {
-    console.log('getRoleIdByRoleName not implemented by this adapter');
+    this.bot.log.warning('getRoleIdByRoleName not implemented by this adapter');
     return name;
   }
 
@@ -112,44 +104,49 @@ export default class Adapter {
 
   async initUsers() {
     await this.bot.databaseInitialized();
-
-    this.adapterUsers = this.bot.db.get(`exobot-users.${this.name}`).value();
+    this.adapterUsers = this.bot.users[this.name];
     if (this.adapterUsers) {
       return;
     }
 
-    this.bot.db.set(`exobot-users.${this.name}`, {}).value();
-    this.adapterUsers = this.bot.db.get(`exobot-users.${this.name}`).value();
+    this.bot.users[this.name] = {};
+    this.adapterUsers = this.bot.users[this.name];
+    this.bot.db.write();
   }
 
   getRoles() {
-    console.log('getRoles not implemented by this adapter');
+    this.bot.log.warning('getRoles not implemented by this adapter');
     return false;
   }
 
   async getUser(adapterUserId, adapterUsername, adapterUser = {}) {
     await this.bot.databaseInitialized();
-    const roles = [];
-    const rolesUpdated = this.getRoles(adapterUserId, adapterUser, roles);
-    
+    if (!adapterUserId) {
+      this.bot.error(`Adapter ${this.name} called getUser without adapterUserId`);
+    }
+    if (!adapterUsername) {
+      this.bot.warning(`Adapter ${this.name} called getUser without adapterUsername`);
+    }
+
+    const roles = this.getRoles(adapterUserId, adapterUser);
     if (this.adapterUsers) {
       if (this.adapterUsers[adapterUserId]) {
-        if (rolesUpdated) {
+        if (roles) {
           this.adapterUsers[adapterUserId].roles = roles;
         }
 
         if (adapterUsername) {
-          this.bot.users.botUsers[this.adapterUsers[adapterUserId].botID].name = adapterUsername;
+          this.bot.users.botUsers[this.adapterUsers[adapterUserId].botId].name = adapterUsername;
         }
 
-        return this.bot.users.botUsers[this.adapterUsers[adapterUserId].botID];
+        return this.bot.users.botUsers[this.adapterUsers[adapterUserId].botId];
       }
 
       const user = new User(adapterUsername);
-      user.adapters = {[this.name]:{userId: adapterUserId}};
+      user.adapters = {[this.name]: {userId: adapterUserId}};
       this.adapterUsers[adapterUserId] = {name: adapterUsername,
-                                          botID: user.id,
-                                          roles};
+                                          botId: user.id,
+                                          roles: roles || []};
       this.bot.users.botUsers[user.id] = user;
       this.bot.db.write();
       return user;

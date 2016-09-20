@@ -1,15 +1,17 @@
 import Emitter from 'eventemitter3';
 import Log from 'log';
-//import superagent from 'superagent';
-//import sapp from 'superagent-promise-plugin';
+import superagent from 'superagent';
+import sapp from 'superagent-promise-plugin';
 import { intersection, union } from 'lodash/array';
 import { merge } from 'lodash';
+import util from 'util';
 
-///sapp.Promise = Promise;
+sapp.Promise = Promise;
 
 import { Permissions } from './plugins/plugins';
 
-//const http = sapp.patch(superagent);
+const http = sapp.patch(superagent);
+const USERS_DB = 'exobot-users';
 
 import { DB } from './db';
 
@@ -21,7 +23,7 @@ export class Exobot {
     this.name = name;
     this.alias = options.alias;
     this.emitter = new Emitter();
-    //this.http = http;
+    this.http = http;
     this.requirePermissions = options.requirePermissions;
 
     this.initLog(options.logLevel || Log.WARNING);
@@ -80,20 +82,20 @@ export class Exobot {
 
   async initUsers () {
     await this.databaseInitialized();
-    this.users = this.db.get('exobot-users').value();
+    this.users = this.db.get(USERS_DB).value();
     if (this.users) {
+      this.log.info(Object.keys(this.users.botUsers).length, 'exobot users');
       return;
     }
-    this.db.set('exobot-users', {botUsers: {}}).value();
-    this.users = this.db.get('exobot-users').value();
+    this.db.set(USERS_DB, {botUsers: {}}).value();
+    this.users = this.db.get(USERS_DB).value();
   }
 
-  mergeUsers (destUser, srcUser)
-  {
+  mergeUsers (destUser, srcUser) {
     if (destUser && srcUser) {
       merge(destUser.roles, srcUser.roles);
-      Object.keys(srcUser.adapters).map((adapter) => {
-        this.users[adapter][srcUser.adapters[adapter].userId].botID = destUser.id;
+      Object.keys(srcUser.adapters).map(adapter => {
+        this.users[adapter][srcUser.adapters[adapter].userId].botId = destUser.id;
       });
       merge(destUser.adapters, srcUser.adapters);
       delete this.users.botUsers[srcUser.id];
@@ -103,26 +105,39 @@ export class Exobot {
 
   }
 
+  addRole(userId, roleName) {
+    this.users.botUsers[userId].roles[roleName] = true;
+    this.db.write();
+  }
+
+  getRoles(userId) {
+    return Object.keys(this.users.botUsers[userId].roles);
+  }
+
+  removeRole(userId, roleName) {
+    const roles = this.users.botUsers[userId].roles;
+    delete roles[roleName];
+    this.db.write();
+  }
+
   getUserRoles (userId) {
     const user = this.users.botUsers[userId];
     let roles = [];
 
     if (user) {
-      Object.keys(user.adapters).map( (adapter) => {
-        this.adapters[adapter].getRolesForUser(user.adapters[adapter].userId).map( (role) => {
-          roles.push(role);
-        });
+      Object.keys(user.adapters).map(adapter => {
+        const adapterRoles = this.adapters[adapter].getRolesForUser(user.adapters[adapter].userId);
+        if (adapterRoles) {
+          roles = roles.concat(adapterRoles);
+        }
       });
-      Object.keys(user.roles).map( (role) => {
-        roles.push(role);
-      });
+      roles = roles.concat(Object.keys(user.roles));
       return roles;
     }
   }
 
   async checkPermissions (userId, commandPermissionGroup) {
     if (!this.usePermissions) { return true; }
-
     // special group for admin authorization - otherwise you could never auth
     // in the first place when public commands are disabled
     if (commandPermissionGroup === 'permissions.public') { return true; }
@@ -204,7 +219,7 @@ export class Exobot {
     const adapter = this.getAdapterByMessage(message);
 
     if (!adapter) {
-      this.bot.log.warning(`Message sent with invalid adapter: ${message.adapter}`);
+      this.log.warning(`Message sent with invalid adapter: ${message.adapter}`);
       return;
     }
 

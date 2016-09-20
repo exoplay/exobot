@@ -34,8 +34,7 @@ export class Permissions extends ChatPlugin {
     // Validate the password - if there is one.
     if (this.adminPassword && adminPassword === this.adminPassword) {
       const id = Permissions.nameToId(message.user.id);
-      this.bot.users.botUsers[id].roles.admin = true;
-      this.bot.db.write();
+      this.bot.addRole(id, 'admin');
       return 'User authorized as admin.';
     }
   }
@@ -50,12 +49,11 @@ export class Permissions extends ChatPlugin {
     try {
       userIdDirty = await this.bot.adapters[message.adapter].getUserIdByUserName(name);
     } catch (err) {
-      console.log(err);
+      this.bot.log.warn(err);
     }
     const userId = Permissions.nameToId(userIdDirty);
     if (userId) {
-      this.bot.users.botUsers[userId].roles[role] = true;
-      this.bot.db.write();
+      this.bot.addRole(userId, role);
       return `${name} added to role ${role}.`;
     }
   }
@@ -69,11 +67,29 @@ export class Permissions extends ChatPlugin {
     try {
       userIdDirty = await this.bot.adapters[message.adapter].getUserIdByUserName(name);
     } catch (err) {
-      console.log(err);
+      this.bot.log.warn(err);
     }
     const userId = Permissions.nameToId(userIdDirty);
     if (userId) {
-      const perms = Object.keys(this.bot.users.botUsers[userId].roles);
+      const perms = this.bot.getRoles(userId);
+      return perms.join(', ');
+    }
+  }
+
+  @help('/permissions view effetive user <user> to view all roles assigned to <user>');
+  @permissionGroup('role-management');
+  @respond(/^permissions view effective user (\w+)$/i);
+  async viewEffectiveUser ([match, name], message) {
+    await this.databaseInitialized();
+    let userIdDirty;
+    try {
+      userIdDirty = await this.bot.adapters[message.adapter].getUserIdByUserName(name);
+    } catch (err) {
+      this.bot.log.warn(err);
+    }
+    const userId = Permissions.nameToId(userIdDirty);
+    if (userId) {
+      const perms = this.bot.getUserRoles(userId);
       return perms.join(', ');
     }
   }
@@ -88,13 +104,11 @@ export class Permissions extends ChatPlugin {
     try {
       userIdDirty = await this.bot.adapters[message.adapter].getUserIdByUserName(name);
     } catch (err) {
-      console.log(err);
+      this.bot.log.warn(err);
     }
     const userId = Permissions.nameToId(userIdDirty);
     if (userId) {
-      const roles = this.bot.users.botUsers[userId].roles;
-      delete roles[role];
-      this.bot.db.write();
+      this.bot.removeRole(userId, role);
       return `${name} removed from role ${role}.`;
     }
   }
