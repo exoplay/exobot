@@ -1,4 +1,4 @@
-import { ChatPlugin, listen, help, permissionGroup } from '../chat';
+import { ChatPlugin, listen, respond, help, permissionGroup } from '../chat';
 
 const GREETINGS = [
   'hi',
@@ -28,6 +28,7 @@ export class Greetings extends ChatPlugin {
   @help('Greets you back when you greet the channel.');
   @permissionGroup('greetings');
   @listen(shouldGreet)
+  @respond(shouldGreet)
   greeting (_, message) {
     const randomGreeting = GREETINGS[parseInt(Math.random() * GREETINGS.length)];
     return `${randomGreeting}, ${message.user.name}!`;
@@ -36,6 +37,7 @@ export class Greetings extends ChatPlugin {
   @help('Says goodbye when you do.');
   @permissionGroup('greetings');
   @listen(shouldFarewell)
+  @respond(shouldFarewell)
   farewell (_, message) {
     const randomFarewell = FAREWELLS[parseInt(Math.random() * FAREWELLS.length)];
     return `${randomFarewell}, ${message.user.name}!`;

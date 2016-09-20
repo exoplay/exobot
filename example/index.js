@@ -31,7 +31,7 @@ const bot = new Exobot(BOT_NAME, {
   port: HTTP_LISTENER_PORT,
   logLevel: LOG_LEVEL,
   key: ENCRYPTION_KEY,
-  requirePermisisons: true,
+  requirePermisisons: false,
 });
 
 module.exports = bot;

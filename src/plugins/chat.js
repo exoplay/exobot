@@ -25,61 +25,54 @@ export class ChatPlugin extends Plugin {
     this.botNameRegex = new RegExp(`^(?:(?:@?${bot.name}|${bot.alias})[,\\s:.-]*)(.+)`, 'i');
 
     if (this.postConstructor) {
-      this.postConstructor.forEach(([fn, args]) => fn.bind(this)(...args));
+      this.postConstructor.forEach(([fn, args]) => fn.call(this, ...args));
     }
 
-    bot.emitter.on('receive-message', message => {
+    bot.emitter.on('receive-message', m => {
       // v = [
       //   validation function or regex,
       //   the response function from the plugin,
       //   the name of the function (the class.property name)
       // ];
       // as pushed by the listen/respond functions below
-      this.respondFunctions.forEach(v => this.process(...v, message, true));
-      this.listenFunctions.forEach(v => this.process(...v, message));
+
+      // strip out the bot name from the beginning before processing
+      const text = this.stripLeadingBotName(m.text);
+
+      let skipFns = [];
+
+      // If it had the bot name at the beginning, process the respond functions
+      if (text) {
+        // create a new message with the stripped text and pass it in
+        const message = new TextMessage({ ...m, text });
+        this.respondFunctions.forEach(v => this.process(...v, message));
+        skipFns = this.respondFunctions.map(([,,name]) => name);
+      }
+
+      this.listenFunctions
+            .filter(([,,name]) => !skipFns.includes(name))
+            .forEach(v => this.process(...v, m));
     });
   }
 
-  async process (validation, response, fnName, message, isResponder=false) {
+  async process (validation, response, fnName, message) {
     try {
-      if (isResponder) {
-        const text = this.validateBotName(message);
-        if (!text) { return; }
-
-        message = new TextMessage({ ...message, text, direct: true });
-      } else if (message.whisper) {
-
-        // if it's a listener on a whisper, remove the botname first so it still
-        // works
-        const text = this.validateBotName(message);
-        if (!text) { return; }
-
-        message = new TextMessage({ ...message, text, direct: true });
-      } else {
-        const text = message.text;
-        if (!text) { return; }
-
-        message = new TextMessage({ ...message, text, direct: true });
-      }
-
-      if (validation.exec) { validation = this.validate(validation); }
-
-      const res = validation(message);
+      const fn = validation.exec ? this.validateMessage(validation) : validation;
+      const res = fn(message);
 
       if (res) {
         if (await this.checkPermissions(message.user.id, this[fnName].permissionGroup)) {
-          const text = response.bind(this)(res, message);
+          const text = response.call(this, res, message);
           if (!text) { return; }
 
           if (text instanceof Promise) {
-            text.then(t => {
-              const newMessage = new TextMessage({ ...message, text: t });
-              this.bot.send(newMessage);
-            });
-          } else {
-            const newMessage = new TextMessage({ ...message, text });
-            this.bot.send(newMessage);
+            const t = await text;
+            const newMessage = new TextMessage({ ...message, text: t });
+            return this.bot.send(newMessage);
           }
+
+          const newMessage = new TextMessage({ ...message, text });
+          this.bot.send(newMessage);
         }
       }
     } catch (e) {
@@ -91,12 +84,8 @@ export class ChatPlugin extends Plugin {
     return this.bot.checkPermissions(userId, commandPermissionGroup);
   }
 
-  validate (regex) {
-    return message => regex.exec(message.text);
-  }
-
-  validateBotName (message) {
-    const exec = this.botNameRegex.exec(message.text);
+  stripLeadingBotName (text) {
+    const exec = this.botNameRegex.exec(text);
     if (!exec) { return; }
 
     return exec[1];
@@ -117,6 +106,10 @@ export class ChatPlugin extends Plugin {
 
   setPermissionGroup (fn, name) {
     this[fn].permissionGroup = `${this.name}.${name}`;
+  }
+
+  validateMessage (regex) {
+    return message => regex.exec(message.text);
   }
 }
 
