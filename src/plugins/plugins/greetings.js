@@ -18,8 +18,28 @@ const FAREWELLS = [
   'cya',
 ];
 
-const shouldGreet = (m) => GREETINGS.includes(m.text.toLowerCase());
-const shouldFarewell = (m) => FAREWELLS.includes(m.text.toLowerCase());
+let GREETINGS_REGEX;
+const getGreetingsRegex = bot => {
+  if (GREETINGS_REGEX) { return GREETINGS_REGEX; }
+
+  GREETINGS_REGEX =
+    new RegExp(`^(?:${GREETINGS.join('|')})[\\s,:]*(?:@?${bot.name})?[!\\.]*$`, 'i');
+
+  return GREETINGS_REGEX;
+};
+
+let FAREWELLS_REGEX;
+const getFarewellsRegex = bot => {
+  if (FAREWELLS_REGEX) { return FAREWELLS_REGEX; }
+
+  FAREWELLS_REGEX =
+    new RegExp(`^(?:${FAREWELLS.join('|')})[\\s,:]*(?:@?${bot.name})?[!\\.]*$`, 'i');
+
+  return FAREWELLS_REGEX;
+};
+
+const shouldGreet = (m, bot) => getGreetingsRegex(bot).exec(m.text);
+const shouldFarewell = (m, bot) => getFarewellsRegex(bot).exec(m.text);
 
 export class Greetings extends ChatPlugin {
   name = 'greeting';

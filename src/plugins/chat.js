@@ -58,7 +58,7 @@ export class ChatPlugin extends Plugin {
   async process (validation, response, fnName, message) {
     try {
       const fn = validation.exec ? this.validateMessage(validation) : validation;
-      const res = fn(message);
+      const res = fn(message, this.bot);
 
       if (res) {
         if (await this.checkPermissions(message.user.id, this[fnName].permissionGroup)) {
