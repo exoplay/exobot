@@ -2,6 +2,7 @@ import { ChatPlugin, respond, help, permissionGroup } from '../chat';
 
 export class Help extends ChatPlugin {
   name = 'help';
+  propTypes = {};
 
   @help('/help explains commands.');
   @permissionGroup('help');

@@ -5,14 +5,13 @@ const Log = require('log');
 const { Exobot, adapters, plugins } = require('../exobot');
 const { Help, Greetings, Permissions } = plugins;
 
-
 const {
   BOT_ALIAS = '!e',
   BOT_NAME = 'exobot',
   HTTP_LISTENER_PORT = '8080',
   LOG_LEVEL = Log.INFO,
-  ADMIN_PASSWORD = 'wuttup',
   ENCRYPTION_KEY = 'bananasaurus',
+  ADMIN_PASSWORD = 'wuttup',
 } = process.env;
 
 const shell = adapters.Shell;

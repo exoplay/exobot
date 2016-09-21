@@ -1,31 +1,21 @@
 import { ChatPlugin, respond, help, permissionGroup } from '../chat';
+import { PropTypes as T } from '../../exobot';
+
 import { v4 as uuid } from 'node-uuid';
 
 export class Permissions extends ChatPlugin {
   name = 'permissions';
   defaultDatabase = { permissions: {} };
 
+  propTypes = {
+    adminPassword: T.string.isRequired,
+  };
+
   static nameToId = (name) => {
     if (name) {
       return name.replace(/[^\w-]/g, '').toLowerCase();
     }
     return;
-  }
-
-  constructor (options) {
-    super(...arguments);
-
-    if (options) {
-      this.adminPassword = options.adminPassword;
-    }
-  }
-
-  register (bot) {
-    super.register(bot);
-
-    if (!this.adminPassword) {
-      bot.log.error('No adminPassword provided to Permissions plugin');
-    }
   }
 
   @help('/permissions authorize admin <password> to authorize yourself as an admin');
@@ -35,7 +25,7 @@ export class Permissions extends ChatPlugin {
     await this.databaseInitialized();
 
     // Validate the password - if there is one.
-    if (this.adminPassword && adminPassword === this.adminPassword) {
+    if (this.options.adminPassword && adminPassword === this.options.adminPassword) {
       const id = Permissions.nameToId(message.user.id);
       this.bot.addRole(id, 'admin');
       return 'User authorized as admin.';

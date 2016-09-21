@@ -36,7 +36,7 @@ export default class Adapter {
 
   receive ({ user, text, channel, whisper }) {
     if (!text) {
-      this.bot.log.warning('Message received with undefined text.');
+      this.bot.log.info('Message received with undefined text.');
       return;
     }
 
@@ -77,7 +77,7 @@ export default class Adapter {
   }
 
   send (message) {
-    this.bot.log.warning(message.text);
+    console.log(message.text);
   }
 
   ping () {
@@ -132,6 +132,7 @@ export default class Adapter {
     if (this.adapterUsers) {
       if (this.adapterUsers[adapterUserId]) {
         if (roles) {
+          console.log('1');
           this.adapterUsers[adapterUserId].roles = roles;
         }
 
