@@ -2,9 +2,11 @@ import Emitter from 'eventemitter3';
 import Log from 'log';
 import superagent from 'superagent';
 import sapp from 'superagent-promise-plugin';
-import { intersection, union } from 'lodash/array';
+import { intersection } from 'lodash/array';
 import { merge } from 'lodash';
-import util from 'util';
+import T from 'proptypes';
+
+export const PropTypes = T;
 
 sapp.Promise = Promise;
 
@@ -27,6 +29,9 @@ export class Exobot {
     this.requirePermissions = options.requirePermissions;
 
     this.initLog(options.logLevel || Log.WARNING);
+
+    process.on('unhandledRejection', this.log.critical.bind(this.log));
+
     const dbPath = options.dbPath || `./data/${name}.json`;
     this.initDB(options.key, dbPath, options.readFile, options.writeFile);
     this.initUsers();
@@ -83,10 +88,12 @@ export class Exobot {
   async initUsers () {
     await this.databaseInitialized();
     this.users = this.db.get(USERS_DB).value();
+
     if (this.users) {
-      this.log.info(Object.keys(this.users.botUsers).length, 'exobot users');
+      this.log.debug(Object.keys(this.users.botUsers).length, 'exobot users');
       return;
     }
+
     this.db.set(USERS_DB, {botUsers: {}}).value();
     this.users = this.db.get(USERS_DB).value();
   }

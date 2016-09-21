@@ -23,6 +23,7 @@ const shouldFarewell = (m) => FAREWELLS.includes(m.text.toLowerCase());
 
 export class Greetings extends ChatPlugin {
   name = 'greeting';
+  propTypes = {};
 
   @help('Greets you back when you greet the channel.');
   @permissionGroup('greetings');
