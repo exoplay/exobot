@@ -77,7 +77,7 @@ export class Exobot {
     }).then((db) => {
       this.db = db;
       this.emitter.emit('dbLoaded', db);
-    }, this.log.critical);
+    }, this.log.critical.bind(this.log));
   }
 
   async initUsers () {

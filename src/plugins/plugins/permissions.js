@@ -6,7 +6,10 @@ export class Permissions extends ChatPlugin {
   defaultDatabase = { permissions: {} };
 
   static nameToId = (name) => {
-    return name.replace(/[^\w-]/g, '').toLowerCase();
+    if (name) {
+      return name.replace(/[^\w-]/g, '').toLowerCase();
+    }
+    return;
   }
 
   constructor (options) {
@@ -27,7 +30,7 @@ export class Permissions extends ChatPlugin {
 
   @help('/permissions authorize admin <password> to authorize yourself as an admin');
   @permissionGroup('public');
-  @respond(/^permissions authorize admin (\S+)$/i);
+  @respond(/^permissions authorize admin (.+)$/i);
   async admin ([, adminPassword], message) {
     await this.databaseInitialized();
 
@@ -39,10 +42,10 @@ export class Permissions extends ChatPlugin {
     }
   }
 
-  @help('/permissions add user <user> <role> to add a role to a user');
+  @help('/permissions add role <role> to <user> to add a role to a user');
   @permissionGroup('role-management');
-  @respond(/^permissions add user (\w+) (\w+)$/i);
-  async addRoleToUser ([match, name, role], message) {
+  @respond(/^permissions add role (\w+) to (.+)$/i);
+  async addRoleToUser ([match, role, name], message) {
     role = Permissions.nameToId(role);
     await this.databaseInitialized();
     let userIdDirty;
@@ -60,7 +63,7 @@ export class Permissions extends ChatPlugin {
 
   @help('/permissions view user <user> to view roles given to a user');
   @permissionGroup('role-management');
-  @respond(/^permissions view user (\w+)$/i);
+  @respond(/^permissions view user (.+)$/i);
   async viewUser ([match, name], message) {
     await this.databaseInitialized();
     let userIdDirty;
@@ -76,9 +79,9 @@ export class Permissions extends ChatPlugin {
     }
   }
 
-  @help('/permissions view effetive user <user> to view all roles assigned to <user>');
+  @help('/permissions view effective user <user> to view all roles assigned to <user>');
   @permissionGroup('role-management');
-  @respond(/^permissions view effective user (\w+)$/i);
+  @respond(/^permissions view effective user (.+)$/i);
   async viewEffectiveUser ([match, name], message) {
     await this.databaseInitialized();
     let userIdDirty;
@@ -94,10 +97,10 @@ export class Permissions extends ChatPlugin {
     }
   }
 
-  @help('/permissions remove user <user> <role> to remove a role from a user');
+  @help('/permissions remove role <role> from <user> to remove a role from a user');
   @permissionGroup('role-management');
-  @respond(/^permissions remove user (\w+) (\w+)$/i);
-  async removeRoleFromUser ([match, name, role], message) {
+  @respond(/^permissions remove role (\w+) from (.+)$/i);
+  async removeRoleFromUser ([match, role, name], message) {
     role = Permissions.nameToId(role);
     await this.databaseInitialized();
     let userIdDirty;
@@ -152,7 +155,8 @@ export class Permissions extends ChatPlugin {
     return perms.join(', ');
   }
 
-  @help('/login userIdString userToken');
+  @help('/login to recieve a token to claim your users across chat adapters, ' +
+    '/login <userIdString> <userToken> to login on another adapter');
   @permissionGroup('public');
   @respond(/^login\s*(\S+)?\s*(\S+)?$/i);
   async multipleAdapterLogin ([, userId, token], message) {
@@ -167,7 +171,7 @@ export class Permissions extends ChatPlugin {
       }
       return 'Wrong userId or token specified';
     }
-    token = uuid().replace(/[-]/g, '').substring(0,15);
+    token = uuid();
     message.user.token = token;
     return 'Please whisper this to the bot on the other adapter \n' +
             `login ${message.user.id} ${token}`;

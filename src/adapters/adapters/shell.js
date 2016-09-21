@@ -1,10 +1,8 @@
 import readline from 'readline';
 
 import Adapter from '../adapter';
-import User from '../../user';
 
 const SHELL = 'SHELL';
-const SHELL_USER = new User('shell');
 
 const EXIT_COMMANDS = [
   'exit',
@@ -21,18 +19,21 @@ export default class ShellAdapter extends Adapter {
       input: process.stdin,
       output: process.stdout,
     });
+
   }
 
-  prompt () {
+  async prompt () {
+    await this.bot.databaseInitialized();
+    this.user = await this.getUser('shell', 'shell');
     this.rl.question('Chat: ', (answer) => {
       if (EXIT_COMMANDS.includes(answer)) {
-        return process.exit();
+        this.bot.db.write().then(() => process.exit());
       }
 
       super.receive({
         text: answer,
         channel: SHELL,
-        user: SHELL_USER,
+        user: this.user,
       });
 
       this.prompt();
@@ -43,9 +44,10 @@ export default class ShellAdapter extends Adapter {
     super.register(bot);
     this.prompt();
     this.status = Adapter.STATUS.CONNECTED;
+
   }
 
   getUserIdByUserName () {
-    return 'shell';
+    return this.user.id;
   }
 }
