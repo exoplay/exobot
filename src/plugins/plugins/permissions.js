@@ -1,11 +1,15 @@
 import { ChatPlugin, respond, help, permissionGroup } from '../chat';
+import { v4 as uuid } from 'node-uuid';
 
 export class Permissions extends ChatPlugin {
   name = 'permissions';
   defaultDatabase = { permissions: {} };
 
   static nameToId = (name) => {
-    return name.replace(/[^\w]/g, '').toLowerCase();
+    if (name) {
+      return name.replace(/[^\w-]/g, '').toLowerCase();
+    }
+    return;
   }
 
   constructor (options) {
@@ -26,69 +30,88 @@ export class Permissions extends ChatPlugin {
 
   @help('/permissions authorize admin <password> to authorize yourself as an admin');
   @permissionGroup('public');
-  @respond(/^permissions authorize admin (\S+)$/i);
+  @respond(/^permissions authorize admin (.+)$/i);
   async admin ([, adminPassword], message) {
     await this.databaseInitialized();
 
     // Validate the password - if there is one.
     if (this.adminPassword && adminPassword === this.adminPassword) {
       const id = Permissions.nameToId(message.user.id);
-      this.bot.db.set(`permissions.users.${id}.roles.admin`, true).value();
-      this.bot.db.write();
+      this.bot.addRole(id, 'admin');
       return 'User authorized as admin.';
     }
   }
 
-  @help('/permissions add user <user> <role> to add a role to a user');
+  @help('/permissions add role <role> to <user> to add a role to a user');
   @permissionGroup('role-management');
-  @respond(/^permissions add user (\w+) (\w+)$/i);
-  async addRoleToUser ([match, name, role], message) {
+  @respond(/^permissions add role (\w+) to (.+)$/i);
+  async addRoleToUser ([match, role, name], message) {
     role = Permissions.nameToId(role);
     await this.databaseInitialized();
-
-    const userId = Permissions.nameToId(
-      this.bot.adapters[message.adapter].getUserIdByUserName(name)
-    );
-
+    let userIdDirty;
+    try {
+      userIdDirty = await this.bot.adapters[message.adapter].getUserIdByUserName(name);
+    } catch (err) {
+      this.bot.log.warn(err);
+    }
+    const userId = Permissions.nameToId(userIdDirty);
     if (userId) {
-      this.bot.db.set(`permissions.users.${userId}.roles.${role}`, true).value();
-      this.bot.db.write();
+      this.bot.addRole(userId, role);
       return `${name} added to role ${role}.`;
     }
   }
 
   @help('/permissions view user <user> to view roles given to a user');
   @permissionGroup('role-management');
-  @respond(/^permissions view user (\w+)$/i);
+  @respond(/^permissions view user (.+)$/i);
   async viewUser ([match, name], message) {
     await this.databaseInitialized();
-
-    const userId = Permissions.nameToId(
-      this.bot.adapters[message.adapter].getUserIdByUserName(name)
-    );
-
+    let userIdDirty;
+    try {
+      userIdDirty = await this.bot.adapters[message.adapter].getUserIdByUserName(name);
+    } catch (err) {
+      this.bot.log.warn(err);
+    }
+    const userId = Permissions.nameToId(userIdDirty);
     if (userId) {
-      const perms = Object.keys(this.bot.db.get(`permissions.users.${userId}.roles`).value());
+      const perms = this.bot.getRoles(userId);
       return perms.join(', ');
     }
   }
 
-  @help('/permissions remove user <user> <role> to remove a role from a user');
+  @help('/permissions view effective user <user> to view all roles assigned to <user>');
   @permissionGroup('role-management');
-  @respond(/^permissions remove user (\w+) (\w+)$/i);
-  async removeRoleFromUser ([match, name, role], message) {
+  @respond(/^permissions view effective user (.+)$/i);
+  async viewEffectiveUser ([match, name], message) {
+    await this.databaseInitialized();
+    let userIdDirty;
+    try {
+      userIdDirty = await this.bot.adapters[message.adapter].getUserIdByUserName(name);
+    } catch (err) {
+      this.bot.log.warn(err);
+    }
+    const userId = Permissions.nameToId(userIdDirty);
+    if (userId) {
+      const perms = this.bot.getUserRoles(userId);
+      return perms.join(', ');
+    }
+  }
+
+  @help('/permissions remove role <role> from <user> to remove a role from a user');
+  @permissionGroup('role-management');
+  @respond(/^permissions remove role (\w+) from (.+)$/i);
+  async removeRoleFromUser ([match, role, name], message) {
     role = Permissions.nameToId(role);
     await this.databaseInitialized();
-
-    const userId = Permissions.nameToId(
-      this.bot.adapters[message.adapter].getUserIdByUserName(name)
-    );
-
+    let userIdDirty;
+    try {
+      userIdDirty = await this.bot.adapters[message.adapter].getUserIdByUserName(name);
+    } catch (err) {
+      this.bot.log.warn(err);
+    }
+    const userId = Permissions.nameToId(userIdDirty);
     if (userId) {
-      const roles = this.bot.db.get(`permissions.users.${userId}.roles`).value();
-      delete roles[role];
-      this.bot.db.set(`permissions.users.${userId}.roles`, roles).value();
-      this.bot.db.write();
+      this.bot.removeRole(userId, role);
       return `${name} removed from role ${role}.`;
     }
   }
@@ -131,4 +154,27 @@ export class Permissions extends ChatPlugin {
     const perms = Object.keys(this.bot.db.get(`permissions.groups.${group}`).value());
     return perms.join(', ');
   }
+
+  @help('/login to recieve a token to claim your users across chat adapters, ' +
+    '/login <userIdString> <userToken> to login on another adapter');
+  @permissionGroup('public');
+  @respond(/^login\s*(\S+)?\s*(\S+)?$/i);
+  async multipleAdapterLogin ([, userId, token], message) {
+    await this.databaseInitialized();
+    if (userId && token) {
+      const user = this.bot.users.botUsers[userId];
+      if (user && user.id !== message.user.id) {
+        if (user.token === token) {
+          user.token = undefined;
+          return this.bot.mergeUsers(user, message.user);
+        }
+      }
+      return 'Wrong userId or token specified';
+    }
+    token = uuid();
+    message.user.token = token;
+    return 'Please whisper this to the bot on the other adapter \n' +
+            `login ${message.user.id} ${token}`;
+  }
+
 }

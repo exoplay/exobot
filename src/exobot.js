@@ -2,11 +2,16 @@ import Emitter from 'eventemitter3';
 import Log from 'log';
 import superagent from 'superagent';
 import sapp from 'superagent-promise-plugin';
+import { intersection, union } from 'lodash/array';
+import { merge } from 'lodash';
+import util from 'util';
+
 sapp.Promise = Promise;
 
 import { Permissions } from './plugins/plugins';
 
 const http = sapp.patch(superagent);
+const USERS_DB = 'exobot-users';
 
 import { DB } from './db';
 
@@ -22,11 +27,13 @@ export class Exobot {
     this.requirePermissions = options.requirePermissions;
 
     this.initLog(options.logLevel || Log.WARNING);
+    const dbPath = options.dbPath || `./data/${name}.json`;
+    this.initDB(options.key, dbPath, options.readFile, options.writeFile);
+    this.initUsers();
+
     this.initAdapters(options.adapters);
     this.initPlugins(options.plugins);
 
-    const dbPath = options.dbPath || `./data/${name}.json`;
-    this.initDB(options.key, dbPath, options.readFile, options.writeFile);
   }
 
   initAdapters = (adapters=[]) => {
@@ -70,7 +77,110 @@ export class Exobot {
     }).then((db) => {
       this.db = db;
       this.emitter.emit('dbLoaded', db);
-    }, this.log.critical);
+    }, this.log.critical.bind(this.log));
+  }
+
+  async initUsers () {
+    await this.databaseInitialized();
+    this.users = this.db.get(USERS_DB).value();
+    if (this.users) {
+      this.log.info(Object.keys(this.users.botUsers).length, 'exobot users');
+      return;
+    }
+    this.db.set(USERS_DB, {botUsers: {}}).value();
+    this.users = this.db.get(USERS_DB).value();
+  }
+
+  mergeUsers (destUser, srcUser) {
+    if (destUser && srcUser) {
+      merge(destUser.roles, srcUser.roles);
+      Object.keys(srcUser.adapters).map(adapter => {
+        this.users[adapter][srcUser.adapters[adapter].userId].botId = destUser.id;
+      });
+      merge(destUser.adapters, srcUser.adapters);
+      delete this.users.botUsers[srcUser.id];
+      this.db.write();
+      return 'Login complete';
+    }
+
+  }
+
+  addRole(userId, roleName) {
+    this.users.botUsers[userId].roles[roleName] = true;
+    this.db.write();
+  }
+
+  getRoles(userId) {
+    return Object.keys(this.users.botUsers[userId].roles);
+  }
+
+  removeRole(userId, roleName) {
+    const roles = this.users.botUsers[userId].roles;
+    delete roles[roleName];
+    this.db.write();
+  }
+
+  getUserRoles (userId) {
+    const user = this.users.botUsers[userId];
+    let roles = [];
+
+    if (user) {
+      Object.keys(user.adapters).map(adapter => {
+        const adapterRoles = this.adapters[adapter].getRolesForUser(user.adapters[adapter].userId);
+        if (adapterRoles) {
+          roles = roles.concat(adapterRoles);
+        }
+      });
+      roles = roles.concat(Object.keys(user.roles));
+      return roles;
+    }
+  }
+
+  async checkPermissions (userId, commandPermissionGroup) {
+    if (!this.usePermissions) { return true; }
+    // special group for admin authorization - otherwise you could never auth
+    // in the first place when public commands are disabled
+    if (commandPermissionGroup === 'permissions.public') { return true; }
+
+    await this.databaseInitialized();
+
+    // get user's roles
+    const roles = this.getUserRoles(userId);
+    // if user has `admin` role, allow it
+    if (roles && roles.includes('admin')) { return true; }
+
+    // get roles assigned to the command group
+    const groups = this.db.get(`permissions.groups.${commandPermissionGroup}`).value();
+    // if there are no groups, and requirePermissions is false, allow it
+    // requirePermissions = false == (public by default)
+    if (!groups || !Object.keys(groups)) {
+      if (!this.requirePermissions) {
+        return true;
+      }
+
+      // otherwise, if there are no groups, and we're not an admin, return
+      // false.
+      return false;
+    }
+    // if command is in `public`, allow it
+    if (groups.public) { return true; }
+
+    // check user's list of roles against list of groups that have the command
+    // if there's a match (user is in a group with the command), allow it
+    if (intersection(roles, Object.keys(groups)).length) {
+      return true;
+    }
+
+    return false;
+  }
+
+  async databaseInitialized () {
+    if (this.db) {
+      return true;
+    }
+    return new Promise((resolve) => {
+      this.emitter.on('dbLoaded', resolve);
+    });
   }
 
   logProcess = () => {
@@ -90,7 +200,7 @@ export class Exobot {
     }
 
     adapter.register(this);
-    this.adapters[adapter.id] = adapter;
+    this.adapters[adapter.name] = adapter;
   }
 
   prependNameForWhisper (text) {
@@ -109,7 +219,7 @@ export class Exobot {
     const adapter = this.getAdapterByMessage(message);
 
     if (!adapter) {
-      this.bot.log.warning(`Message sent with invalid adapter: ${message.adapter}`);
+      this.log.warning(`Message sent with invalid adapter: ${message.adapter}`);
       return;
     }
 

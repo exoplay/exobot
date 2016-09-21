@@ -1,8 +1,6 @@
-import { v4 as uuid } from 'node-uuid';
-
 import TextMessage from '../messages/text';
 import PresenceMessage from '../messages/presence';
-
+import User from '../user';
 export default class Adapter {
   static STATUS = {
     UNINITIALIZED: 0,
@@ -15,8 +13,8 @@ export default class Adapter {
 
   constructor (options={}) {
     this.options = options;
-    this.id = options.id || uuid();
     this.status = Adapter.STATUS.UNINITIALIZED;
+    this.roleMapping = options.roleMapping;
   }
 
   register (bot) {
@@ -26,9 +24,10 @@ export default class Adapter {
     }
 
     this.bot = bot;
-
+    this.initUsers();
     this.status = Adapter.STATUS.CONNECTING;
     this.listen();
+
   }
 
   listen () {
@@ -41,7 +40,7 @@ export default class Adapter {
       return;
     }
 
-    const message = new TextMessage({ user, text, channel, whisper, adapter: this.id });
+    const message = new TextMessage({ user, text, channel, whisper, adapter: this.name });
     this.bot.emitter.emit('receive-message', message);
   }
 
@@ -59,7 +58,7 @@ export default class Adapter {
     const message = new PresenceMessage({
       user,
       channel,
-      adapter: this.id,
+      adapter: this.name,
       type: PresenceMessage.TYPES.ENTER,
     });
 
@@ -70,7 +69,7 @@ export default class Adapter {
     const message = new PresenceMessage({
       user,
       channel,
-      adapter: this.id,
+      adapter: this.name,
       type: PresenceMessage.TYPES.LEAVE,
     });
 
@@ -78,7 +77,7 @@ export default class Adapter {
   }
 
   send (message) {
-    console.log(message.text);
+    this.bot.log.warning(message.text);
   }
 
   ping () {
@@ -86,11 +85,76 @@ export default class Adapter {
   }
 
   pong () {
-    console.log('Ping received, this.pong() not implemented.');
+    this.bot.log.warning('Ping received, this.pong() not implemented.');
   }
 
   getUserIdByUserName (name) {
-    console.log('getUserIdByUserName not implemented by this adapter.');
+    this.bot.log.warning('getUserIdByUserName not implemented by this adapter.');
     return name;
   }
+
+  getRoleIdByRoleName (name) {
+    this.bot.log.warning('getRoleIdByRoleName not implemented by this adapter');
+    return name;
+  }
+
+  getRolesForUser () {
+    return [];
+  }
+
+  async initUsers() {
+    await this.bot.databaseInitialized();
+    this.adapterUsers = this.bot.users[this.name];
+    if (this.adapterUsers) {
+      return;
+    }
+
+    this.bot.users[this.name] = {};
+    this.adapterUsers = this.bot.users[this.name];
+    this.bot.db.write();
+  }
+
+  getRoles() {
+    this.bot.log.warning('getRoles not implemented by this adapter');
+    return false;
+  }
+
+  async getUser(adapterUserId, adapterUsername, adapterUser = {}) {
+    await this.bot.databaseInitialized();
+    if (!adapterUserId) {
+      this.bot.error(`Adapter ${this.name} called getUser without adapterUserId`);
+    }
+    if (!adapterUsername) {
+      this.bot.warning(`Adapter ${this.name} called getUser without adapterUsername`);
+    }
+
+    const roles = this.getRoles(adapterUserId, adapterUser);
+    if (this.adapterUsers) {
+      if (this.adapterUsers[adapterUserId]) {
+        if (roles) {
+          this.adapterUsers[adapterUserId].roles = roles;
+        }
+
+        if (adapterUsername) {
+          this.bot.users.botUsers[this.adapterUsers[adapterUserId].botId].name = adapterUsername;
+        }
+
+        return this.bot.users.botUsers[this.adapterUsers[adapterUserId].botId];
+      }
+
+      const user = new User(adapterUsername);
+      user.adapters = {[this.name]: {userId: adapterUserId}};
+      this.adapterUsers[adapterUserId] = {name: adapterUsername,
+                                          botId: user.id,
+                                          roles: roles || []};
+      this.bot.users.botUsers[user.id] = user;
+      this.bot.db.write();
+      return user;
+    }
+
+    return new User(adapterUsername,
+                    adapterUserId,
+                    {[this.name]: adapterUserId});
+  }
+
 }
