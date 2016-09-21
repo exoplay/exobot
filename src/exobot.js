@@ -11,6 +11,7 @@ export const PropTypes = T;
 sapp.Promise = Promise;
 
 import { Permissions } from './plugins/plugins';
+import { TextMessage } from './messages';
 
 const http = sapp.patch(superagent);
 const USERS_DB = 'exobot-users';
@@ -24,6 +25,9 @@ export class Exobot {
   constructor (name, options={}) {
     this.name = name;
     this.alias = options.alias;
+    this.botNameRegex =
+      new RegExp(`^(?:(?:@?${name}|${options.alias || name})[,\\s:.-]*)(.+)`, 'i');
+
     this.emitter = new Emitter();
     this.http = http;
     this.requirePermissions = options.requirePermissions;
@@ -87,6 +91,7 @@ export class Exobot {
 
   async initUsers () {
     await this.databaseInitialized();
+
     this.users = this.db.get(USERS_DB).value();
 
     if (this.users) {
@@ -101,15 +106,18 @@ export class Exobot {
   mergeUsers (destUser, srcUser) {
     if (destUser && srcUser) {
       merge(destUser.roles, srcUser.roles);
+
       Object.keys(srcUser.adapters).map(adapter => {
         this.users[adapter][srcUser.adapters[adapter].userId].botId = destUser.id;
       });
+
       merge(destUser.adapters, srcUser.adapters);
+
       delete this.users.botUsers[srcUser.id];
+
       this.db.write();
       return 'Login complete';
     }
-
   }
 
   addRole(userId, roleName) {
@@ -138,6 +146,7 @@ export class Exobot {
           roles = roles.concat(adapterRoles);
         }
       });
+
       roles = roles.concat(Object.keys(user.roles));
       return roles;
     }
@@ -210,17 +219,6 @@ export class Exobot {
     this.adapters[adapter.name] = adapter;
   }
 
-  prependNameForWhisper (text) {
-    if (
-      text.slice(0, this.name.length).toLowerCase() !== this.name.toLowerCase() &&
-      text.slice(0, this.alias.length).toLowerCase() !== this.alias.toLowerCase()
-    ) {
-      text = `${this.name} ${text}`;
-    }
-
-    return text;
-  }
-
   send (message) {
     if (!message.text) { return; }
     const adapter = this.getAdapterByMessage(message);
@@ -242,6 +240,22 @@ export class Exobot {
             .keys(this.adapters)
             .map(id => this.adapters[id])
             .find(a => a.name.toLowerCase() === name.toLowerCase());
+  }
+
+  parseMessage (message) {
+    const { text } = message;
+
+    if (message.whisper) {
+      return new TextMessage({ ...message, respond: true });
+    }
+
+    const exec = this.botNameRegex.exec(text);
+
+    if (exec) {
+      return new TextMessage({ ...message, text: exec[1], respond: true });
+    }
+
+    return new TextMessage(message);
   }
 }
 

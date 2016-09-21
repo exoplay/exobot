@@ -1,7 +1,6 @@
 import Plugin from './plugin';
 import TextMessage from '../messages/text';
 
-
 const DEFAULT_REGEXP = /.+/;
 
 export class ChatPlugin extends Plugin {
@@ -22,7 +21,6 @@ export class ChatPlugin extends Plugin {
   register (bot) {
     super.register(bot);
     this.bot = bot;
-    this.botNameRegex = new RegExp(`^(?:(?:@?${bot.name}|${bot.alias})[,\\s:.-]*)(.+)`, 'i');
 
     if (this.postConstructor) {
       this.postConstructor.forEach(([fn, args]) => fn.call(this, ...args));
@@ -36,16 +34,10 @@ export class ChatPlugin extends Plugin {
       // ];
       // as pushed by the listen/respond functions below
 
-      // strip out the bot name from the beginning before processing
-      const text = this.stripLeadingBotName(m.text);
-
       let skipFns = [];
 
-      // If it had the bot name at the beginning, process the respond functions
-      if (text) {
-        // create a new message with the stripped text and pass it in
-        const message = new TextMessage({ ...m, text });
-        this.respondFunctions.forEach(v => this.process(...v, message));
+      if (m.respond) {
+        this.respondFunctions.forEach(v => this.process(...v, m));
         skipFns = this.respondFunctions.map(([,,name]) => name);
       }
 
@@ -82,13 +74,6 @@ export class ChatPlugin extends Plugin {
 
   async checkPermissions (userId, commandPermissionGroup) {
     return this.bot.checkPermissions(userId, commandPermissionGroup);
-  }
-
-  stripLeadingBotName (text) {
-    const exec = this.botNameRegex.exec(text);
-    if (!exec) { return; }
-
-    return exec[1];
   }
 
   respond (validation, fn, name) {

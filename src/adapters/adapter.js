@@ -1,6 +1,6 @@
-import TextMessage from '../messages/text';
 import PresenceMessage from '../messages/presence';
 import User from '../user';
+
 export default class Adapter {
   static STATUS = {
     UNINITIALIZED: 0,
@@ -40,7 +40,7 @@ export default class Adapter {
       return;
     }
 
-    const message = new TextMessage({ user, text, channel, whisper, adapter: this.name });
+    const message = this.bot.parseMessage({ user, text, channel, whisper, adapter: this.name });
     this.bot.emitter.emit('receive-message', message);
   }
 
@@ -50,7 +50,6 @@ export default class Adapter {
       return;
     }
 
-    text = this.bot.prependNameForWhisper(text);
     this.receive({ user, text, channel, whisper: true });
   }
 
