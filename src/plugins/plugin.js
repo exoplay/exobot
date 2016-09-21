@@ -4,6 +4,7 @@ export default class Plugin {
   help = undefined;
   _requiresDatabase = false;
   propTypes = null;
+  defaultProps = {};
 
   constructor (options={}) {
     this.options = options;
@@ -12,7 +13,7 @@ export default class Plugin {
   register (bot) {
     this.bot = bot;
 
-    this.options = this.parseConfig(this.options);
+    this.options = this.parseConfig({ ...this.defaultProps, ...this.options });
 
     if (this.propTypes && Object.keys(this.propTypes).length) {
       this.checkConfig(this.options, this.propTypes, bot);
