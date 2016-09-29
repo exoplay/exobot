@@ -1,7 +1,9 @@
+import { Configurable } from '../configurable';
+
 import PresenceMessage from '../messages/presence';
 import User from '../user';
 
-export default class Adapter {
+export default class Adapter extends Configurable {
   static STATUS = {
     UNINITIALIZED: 0,
     CONNECTING: 1,
@@ -11,17 +13,23 @@ export default class Adapter {
     ERROR: 5,
   }
 
-  constructor (options={}) {
-    this.options = options;
+  get roleMapping () {
+    return this.options.roleMapping;
+  }
+
+  constructor () {
+    super(...arguments);
     this.status = Adapter.STATUS.UNINITIALIZED;
-    this.roleMapping = options.roleMapping;
   }
 
   register (bot) {
     if (!bot) { throw new Error('No bot passed to register; fatal.'); }
+
     if (!this.name) {
       throw new Error('This adapter has no `name` property; some plugins will not work.');
     }
+
+    this.configure(this.options, bot.log);
 
     this.bot = bot;
     this.initUsers();
@@ -102,7 +110,6 @@ export default class Adapter {
   }
 
   async initUsers() {
-    await this.bot.databaseInitialized();
     this.adapterUsers = this.bot.users[this.name];
     if (this.adapterUsers) {
       return;
@@ -119,12 +126,11 @@ export default class Adapter {
   }
 
   async getUser(adapterUserId, adapterUsername, adapterUser = {}) {
-    await this.bot.databaseInitialized();
     if (!adapterUserId) {
-      this.bot.error(`Adapter ${this.name} called getUser without adapterUserId`);
+      this.bot.log.error(`Adapter ${this.name} called getUser without adapterUserId`);
     }
     if (!adapterUsername) {
-      this.bot.warning(`Adapter ${this.name} called getUser without adapterUsername`);
+      this.bot.log.warning(`Adapter ${this.name} called getUser without adapterUsername`);
     }
 
     const roles = this.getRoles(adapterUserId, adapterUser);

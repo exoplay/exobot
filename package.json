@@ -21,7 +21,9 @@
     "url": "https://github.com/exoplay/exobot/issues"
   },
   "homepage": "https://github.com/exoplay/exobot#readme",
-  "devDependencies": {},
+  "devDependencies": {
+    "babel-polyfill": "^6.16.0"
+  },
   "dependencies": {
     "@r/build": "git://github.com/ajacksified/node-build#679c3f3d47c0916237d55128ece4cc817b489ef8",
     "babel-plugin-syntax-decorators": "^6.8.0",

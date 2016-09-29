@@ -1,5 +1,6 @@
 import readline from 'readline';
 
+import { PropTypes as T } from '../../exobot';
 import Adapter from '../adapter';
 
 const SHELL = 'SHELL';
@@ -13,6 +14,14 @@ const EXIT_COMMANDS = [
 export default class ShellAdapter extends Adapter {
   name = 'shell';
 
+  propTypes = {
+    userName: T.string,
+  };
+
+  defaultProps = {
+    userName: 'shell',
+  };
+
   constructor () {
     super();
     this.rl = readline.createInterface({
@@ -23,8 +32,7 @@ export default class ShellAdapter extends Adapter {
   }
 
   async prompt () {
-    await this.bot.databaseInitialized();
-    this.user = await this.getUser('shell', 'shell');
+    this.user = await this.getUser(this.options.userName, this.options.userName);
     this.rl.question('Chat: ', (answer) => {
       if (EXIT_COMMANDS.includes(answer)) {
         this.bot.db.write().then(() => process.exit());
@@ -49,5 +57,9 @@ export default class ShellAdapter extends Adapter {
 
   getUserIdByUserName () {
     return this.user.id;
+  }
+
+  getRoles() {
+    return false;
   }
 }

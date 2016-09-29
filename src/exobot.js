@@ -4,94 +4,132 @@ import superagent from 'superagent';
 import sapp from 'superagent-promise-plugin';
 import { intersection } from 'lodash/array';
 import { merge } from 'lodash';
-import T from 'proptypes';
-
-export const PropTypes = T;
 
 sapp.Promise = Promise;
 
 import { Permissions } from './plugins/plugins';
 import { TextMessage } from './messages';
 
+import { Configurable, PropTypes as T } from './configurable';
+
+import { Adapter } from './adapters';
+import { Plugin } from './plugins';
+
+// export here for backwards compatibility
+export const PropTypes = T;
+
 const http = sapp.patch(superagent);
 const USERS_DB = 'exobot-users';
 
+const CLASS_NAME_FOR_CONFIG = 'exobot';
+
 import { DB } from './db';
 
-export class Exobot {
+export class Exobot extends Configurable {
   plugins = [];
   adapters = {};
 
-  constructor (name, options={}) {
-    this.name = name;
-    this.alias = options.alias;
+  name = CLASS_NAME_FOR_CONFIG;
+
+  propTypes = {
+    name: T.string.isRequired,
+    key: T.string.isRequired,
+    adapters: T.arrayOf(T.instanceOf(Adapter)).isRequired,
+    plugins: T.arrayOf(T.instanceOf(Plugin)).isRequired,
+    port: T.number.isRequired,
+    requirePermissions: T.bool.isRequired,
+    logLevel: T.number,
+    alias: T.string,
+  };
+
+  defaultProps = {
+    name: 'exobot',
+    adapters: [],
+    plugins: [],
+    port: 8080,
+    logLevel: Log.WARNING,
+    requirePermissions: false,
+  }
+
+  constructor (options={}) {
+    super();
+
+    this.log = this.initLog(options.logLevel);
+    process.on('unhandledRejection', this.log.critical.bind(this.log));
+
+    this.configure(options, this.log);
+  }
+
+  configure (options, log) {
+    super.configure(options, log);
+
     this.botNameRegex =
-      new RegExp(`^(?:(?:@?${name}|${options.alias || name})[,\\s:.-]*)(.+)`, 'i');
+      new RegExp(`^(?:(?:@?${this.options.name}|${this.options.alias})[,\\s:.-]*)(.+)`, 'i');
 
     this.emitter = new Emitter();
     this.http = http;
-    this.requirePermissions = options.requirePermissions;
+    this.requirePermissions = this.options.requirePermissions;
 
-    this.initLog(options.logLevel || Log.WARNING);
-
-    process.on('unhandledRejection', this.log.critical.bind(this.log));
-
-    const dbPath = options.dbPath || `./data/${name}.json`;
-    this.initDB(options.key, dbPath, options.readFile, options.writeFile);
-    this.initUsers();
-
-    this.initAdapters(options.adapters);
-    this.initPlugins(options.plugins);
-
+    this.initialize();
   }
 
-  initAdapters = (adapters=[]) => {
-    adapters.forEach(a => this.addAdapter(a));
-  }
+  async initialize() {
+    const dbPath = this.options.dbPath || `./data/${this.options.name}.json`;
 
-  initPlugins = (plugins=[]) => {
-    plugins.forEach(p => {
-      this.addPlugin(p);
-
-      // if the Permissions plugin isn't initialized, we can optimize later on
-      // by not waiting for DB initialization and permissions checking.
-      if (p instanceof Permissions) {
-        this.usePermissions = true;
-      }
-    });
-  }
-
-  initLog = (logLevel) => {
-    const log = new Log(logLevel || Log.WARNING);
-    this.log = log;
-    this.logLevel = logLevel;
-
-    if (logLevel === Log.DEBUG) {
-      setInterval(this.logProcess, 10000);
-    }
-  }
-
-  initDB = (key, dbPath, readFile, writeFile) => {
-    if (!key) {
-      this.log.critical('Pass options.key in to bot initializer. Database not initializing.');
+    try {
+      await this.initDB(this.options.key, dbPath, this.options.readFile, this.options.writeFile);
+    } catch (e) {
+      this.log.critical(e);
       return;
     }
 
-    DB({
-      key,
-      readFile,
-      writeFile,
-      path: dbPath,
-      emitter: this.emitter,
-    }).then((db) => {
-      this.db = db;
-      this.emitter.emit('dbLoaded', db);
-    }, this.log.critical.bind(this.log));
+    try {
+      this.initUsers();
+      this.initAdapters(this.options.adapters);
+      this.initPlugins(this.options.plugins);
+    } catch (e) {
+      this.log.critical(e);
+    }
   }
 
-  async initUsers () {
-    await this.databaseInitialized();
+  initAdapters (adapters=[]) {
+    adapters.forEach(this.addAdapter);
+  }
 
+  initPlugins (plugins=[]) {
+    this.usePermissions = !!plugins.find(p => p instanceof Permissions);
+    plugins.forEach(this.addPlugin);
+  }
+
+  initLog (logLevel) {
+    return new Log(logLevel);
+  }
+
+  async initDB (key, dbPath, readFile, writeFile) {
+    if (!key) {
+      const err = new Error('Pass options.key in to bot initializer. Database not initializing.');
+      return Promise.reject(err);
+    }
+
+    return new Promise((resolve, reject) => {
+      DB({
+        key,
+        readFile,
+        writeFile,
+        path: dbPath,
+        emitter: this.emitter,
+      }).then((db) => {
+        this.db = db;
+        this.emitter.emit('dbLoaded', db);
+        resolve(db);
+      }, (err) => {
+        this.log.critical.bind(this.log);
+        reject(err);
+      });
+    });
+  }
+
+  initUsers () {
     this.users = this.db.get(USERS_DB).value();
 
     if (this.users) {
@@ -103,7 +141,7 @@ export class Exobot {
     this.users = this.db.get(USERS_DB).value();
   }
 
-  mergeUsers (destUser, srcUser) {
+  mergeUsers = (destUser, srcUser) => {
     if (destUser && srcUser) {
       merge(destUser.roles, srcUser.roles);
 
@@ -120,22 +158,22 @@ export class Exobot {
     }
   }
 
-  addRole(userId, roleName) {
+  addRole = (userId, roleName) => {
     this.users.botUsers[userId].roles[roleName] = true;
     this.db.write();
   }
 
-  getRoles(userId) {
+  getRoles = (userId) => {
     return Object.keys(this.users.botUsers[userId].roles);
   }
 
-  removeRole(userId, roleName) {
+  removeRole = (userId, roleName) => {
     const roles = this.users.botUsers[userId].roles;
     delete roles[roleName];
     this.db.write();
   }
 
-  getUserRoles (userId) {
+  getUserRoles = (userId) => {
     const user = this.users.botUsers[userId];
     let roles = [];
 
@@ -157,8 +195,6 @@ export class Exobot {
     // special group for admin authorization - otherwise you could never auth
     // in the first place when public commands are disabled
     if (commandPermissionGroup === 'permissions.public') { return true; }
-
-    await this.databaseInitialized();
 
     // get user's roles
     const roles = this.getUserRoles(userId);
@@ -190,25 +226,12 @@ export class Exobot {
     return false;
   }
 
-  async databaseInitialized () {
-    if (this.db) {
-      return true;
-    }
-    return new Promise((resolve) => {
-      this.emitter.on('dbLoaded', resolve);
-    });
-  }
-
-  logProcess = () => {
-    this.log.debug(process.memoryUsage(), process.cpuUsage());
-  }
-
-  addPlugin (plugin) {
+  addPlugin = plugin => {
     plugin.register(this);
     this.plugins.push(plugin);
   }
 
-  addAdapter (adapter) {
+  addAdapter = adapter => {
     const name = adapter.name;
 
     if (this.getAdapterByName(name)) {
@@ -219,7 +242,7 @@ export class Exobot {
     this.adapters[adapter.name] = adapter;
   }
 
-  send (message) {
+  send = message => {
     if (!message.text) { return; }
     const adapter = this.getAdapterByMessage(message);
 
@@ -231,18 +254,18 @@ export class Exobot {
     adapter.send(message);
   }
 
-  getAdapterByMessage (message) {
+  getAdapterByMessage = message => {
     return this.adapters[message.adapter];
   }
 
-  getAdapterByName (name) {
+  getAdapterByName = name => {
     return Object
             .keys(this.adapters)
             .map(id => this.adapters[id])
             .find(a => a.name.toLowerCase() === name.toLowerCase());
   }
 
-  parseMessage (message) {
+  parseMessage = message => {
     const { text } = message;
 
     if (message.whisper) {

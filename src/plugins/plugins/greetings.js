@@ -23,7 +23,7 @@ const getGreetingsRegex = bot => {
   if (GREETINGS_REGEX) { return GREETINGS_REGEX; }
 
   GREETINGS_REGEX =
-    new RegExp(`^(?:${GREETINGS.join('|')})[\\s,:]*(?:@?${bot.name})?[!\\.]*$`, 'i');
+    new RegExp(`^(?:${GREETINGS.join('|')})[\\s,:]*(?:@?${bot.options.name})?[!\\.]*$`, 'i');
 
   return GREETINGS_REGEX;
 };
@@ -33,7 +33,7 @@ const getFarewellsRegex = bot => {
   if (FAREWELLS_REGEX) { return FAREWELLS_REGEX; }
 
   FAREWELLS_REGEX =
-    new RegExp(`^(?:${FAREWELLS.join('|')})[\\s,:]*(?:@?${bot.name})?[!\\.]*$`, 'i');
+    new RegExp(`^(?:${FAREWELLS.join('|')})[\\s,:]*(?:@?${bot.options.name})?[!\\.]*$`, 'i');
 
   return FAREWELLS_REGEX;
 };

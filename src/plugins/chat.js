@@ -10,8 +10,9 @@ export class ChatPlugin extends Plugin {
   listenFunctions = [];
   help = [];
 
-  constructor () {
-    super(...arguments);
+  constructor (options) {
+    super(options);
+    this.options = options;
   }
 
   helpText () {
@@ -20,6 +21,7 @@ export class ChatPlugin extends Plugin {
 
   register (bot) {
     super.register(bot);
+
     this.bot = bot;
 
     if (this.postConstructor) {
