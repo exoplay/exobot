@@ -227,6 +227,12 @@ export class Exobot extends Configurable {
   }
 
   addPlugin = plugin => {
+    const name = plugin.name;
+
+    if (this.getPluginByName(name)) {
+      this.log.warning(`Multiple plugins with name "${name}" were initialized.`);
+    }
+
     plugin.register(this);
     this.plugins.push(plugin);
   }
@@ -254,15 +260,24 @@ export class Exobot extends Configurable {
     adapter.send(message);
   }
 
+  getByName = (name, list) => {
+    return Object
+            .keys(list)
+            .map(id => list[id])
+            .find(p => p.name.toLowerCase() === name.toLowerCase());
+  }
+
+  getPluginByName = name => {
+    return this.getByName(name, this.plugins);
+  }
+
   getAdapterByMessage = message => {
     return this.adapters[message.adapter];
   }
 
+
   getAdapterByName = name => {
-    return Object
-            .keys(this.adapters)
-            .map(id => this.adapters[id])
-            .find(a => a.name.toLowerCase() === name.toLowerCase());
+    return this.getByName(name, this.adapters);
   }
 
   parseMessage = message => {

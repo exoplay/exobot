@@ -36,7 +36,7 @@ export class Configurable {
               if (env) { c[k] = env; }
 
               return c;
-            }, {}),
+            }, {})
         ),
       ...options,
     };
