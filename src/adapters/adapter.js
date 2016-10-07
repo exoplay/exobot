@@ -99,6 +99,14 @@ export default class Adapter extends Configurable {
     return name;
   }
 
+  getAdapterUserIdById(userId) {
+    const botUser = this.bot.users.botUsers[userId];
+    if (botUser) {
+      return botUser.adapters[this.name].userId;
+    }
+    return;
+  }
+
   getRoleIdByRoleName(name) {
     this.bot.log.warning('getRoleIdByRoleName not implemented by this adapter');
     return name;

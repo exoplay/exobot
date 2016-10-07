@@ -8,14 +8,22 @@ import { merge } from 'lodash';
 
 import { Permissions } from './plugins/plugins';
 import { TextMessage } from './messages';
-
 import { Configurable, PropTypes as T } from './configurable';
+
 
 import { Adapter } from './adapters';
 import { Plugin } from './plugins';
 import { DB } from './db';
 
 sapp.Promise = Promise;
+
+export const PropTypes = T;
+export const AdapterOperationTypes = {
+  DISCIPLINE_USER_WARNING: 'AO_discipline_user_warning',
+  DISCIPLINE_USER_TEMPORARY: 'AO_discipline_user_temporary',
+  DISCIPLINE_USER_PERMANENT: 'AO_discipline_user_permanent',
+  WHISPER_USER: 'AO_whisper_user',
+};
 
 const http = sapp.patch(superagent);
 const USERS_DB = 'exobot-users';
