@@ -1,4 +1,4 @@
-require('babel-polyfill');
+require('source-map-support');
 
 const { Exobot, adapters, plugins } = require('../exobot');
 const { Help, Greetings, Permissions } = plugins;
