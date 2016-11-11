@@ -19,7 +19,6 @@
   },
   "homepage": "https://github.com/exoplay/exobot#readme",
   "dependencies": {
-    "@exoplay/exobot-build": "0.0.2",
     "cryptr": "~2.0.0",
     "eventemitter3": "~1.2.0",
     "fs-extra": "~0.30.0",
@@ -33,7 +32,7 @@
     "underscore-db": "~0.11.0"
   },
   "devDependencies": {
-    "@exoplay/exobot-build": "^0.0.1"
+    "@exoplay/exobot-build": "^0.0.5"
   },
   "peerDependencies": {
     "source-map-support": "^0.4.6"
