@@ -1,6 +1,6 @@
 {
   "name": "@exoplay/exobot",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "a chatbox",
   "main": "exobot.js",
   "scripts": {
@@ -41,6 +41,6 @@
     "babel-polyfill": "~6.13.0"
   },
   "devDependencies": {
-    "@exoplay/exobot-build": "^0.0.4"
+    "@exoplay/exobot-build": "^0.0.6"
   }
 }
