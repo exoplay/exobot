@@ -1,52 +1,56 @@
 import T from 'proptypes';
+import Log from 'log';
 
 const KEY_REGEX = /([a-z][A-Z])/g;
 
 export const PropTypes = T;
 
+// Create a stub log so that updateConfiguration can pass back a map of logs
+// instead of logging out - for bot commands like
+// /configure <plugin/adapter id> key value
+export class StubLog {
+  logs = {};
+
+  constructor() {
+    Object.keys(Log).forEach((key) => {
+      this[key.toLowerCase()] = (msg) => {
+        this.logs[key.toLowerCase()] = msg;
+      };
+    });
+  }
+}
+
 export class Configurable {
-  propTypes = undefined;
-  defaultProps = {};
+  static propTypes = undefined;
+  static defaultProps = {};
+  static type = 'Configurable';
 
-  constructor (options) {
-    this.options = options;
-  }
-
-  configure (options={}, log) {
-    this.options = this.parseConfig(options, this.propTypes);
-
-    if (this.propTypes && Object.keys(this.propTypes).length) {
-      this.options = this.validateConfig(this.options, this.propTypes, log);
-    }
-  }
-
-  parseConfig (options={}, propTypes={}) {
+  static parseConfig(name = this.type, options = {}) {
     if (!this.propTypes) { return options; }
 
     const optionKeys = Object.keys(options);
 
-    const config = {
+    /* eslint no-param-reassign: 0 */
+    return {
       ...this.defaultProps,
       ...(
           Object.keys(this.propTypes || {})
             .filter(k => !optionKeys.includes(k))
             .reduce((c, k) => {
               // loop through any keys not passed in as properties
-              const env = this.processEnv(k, propTypes[k]);
+              const env = this.processEnv(name, k, this.propTypes[k]);
               if (env) { c[k] = env; }
 
               return c;
             }, {})
         ),
+      name,
       ...options,
     };
-
-    return config;
   }
 
-  processEnv (key, propType) {
-    //process.env[this.envify(k)
-    let val = process.env[this.envify(key)];
+  static processEnv(name, key, propType) {
+    let val = process.env[this.envify(name, key)];
 
     if (!val) { return val; }
     if (!propType) { return val; }
@@ -64,7 +68,7 @@ export class Configurable {
       case T.string:
       case T.string.isRequired:
         return val;
-      default: 
+      default:
         // it isn't a string, number, or bool. could be anything, even T.any.
         // We'll try to parseit out as JSON, or else return whatever the value
         // is.
@@ -76,16 +80,9 @@ export class Configurable {
     }
   }
 
-  validateConfig (config={}, propTypes={}, log) {
-    return Object.keys(config).reduce((validatedConfig, k) => {
-      if (!propTypes[k]) {
-        log.warning(`Unrecognized prop ${k} passed into options of ${this.name} plugin`);
-        validatedConfig[k] = config[k];
-        return validatedConfig;
-      }
-
-
-      const err = propTypes[k](config, k, `${this.name} config`, 'property');
+  static validateConfig(name, config = {}, log) {
+    const c = Object.keys(this.propTypes).reduce((validatedConfig, k) => {
+      const err = this.propTypes[k](config, k, `${name} config`, 'prop');
 
       if (err) {
         log.warning(err.toString());
@@ -95,9 +92,12 @@ export class Configurable {
       validatedConfig[k] = config[k];
       return validatedConfig;
     }, {});
+
+    c.name = name;
+    return c;
   }
 
-  parseBoolean (value) {
+  static parseBoolean(value) {
     if (value === 'false') { return false; }
     if (value === 'true') { return true; }
     if (value === !!value) { return value; }
@@ -105,10 +105,57 @@ export class Configurable {
   }
 
   // turn a key like myKey into PLUGINNAME_MY_KEY
-  envify (key='') {
+  static envify(name, key = '') {
     return [
-      this.name,
+      name,
       key.replace(KEY_REGEX, l => l.split('').join('_')),
     ].join('_').toUpperCase();
+  }
+
+  get name() {
+    if (this.options && this.options.name) {
+      return this.options.name;
+    }
+
+    return this.constructor.type;
+  }
+
+  options = {};
+
+  constructor(options, bot, log = bot.log) {
+    this.bot = bot;
+    this.log = log;
+
+    this.originalOptions = { ...this.options };
+    this.options = this.constructor.parseConfig(options.name, options, log);
+
+    if (this.constructor.propTypes && Object.keys(this.constructor.propTypes).length) {
+      this.options = this.constructor.validateConfig(this.name, this.options, log);
+    }
+  }
+
+  updateConfiguration(options = {}, passThroughErrors = false, overwrite = false) {
+    let merged;
+
+    if (overwrite) {
+      merged = { ...options };
+    } else {
+      merged = this.constructor.parseConfig(this.name, { ...this.options, ...options });
+    }
+
+    const log = passThroughErrors ? new StubLog() : this.log;
+
+    if (this.constructor.propTypes && Object.keys(this.constructor.propTypes).length) {
+      this.options = this.constructor.validateConfig(this.name, merged, log);
+    } else {
+      this.options = merged;
+    }
+
+    this.onConfigChange(options, this.options);
+  }
+
+  // this no-op provides a hook for adapters and plugins to re-initialize
+  // themselves on config changes.
+  onConfigChange() {
   }
 }

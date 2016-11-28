@@ -1,19 +1,22 @@
 require('babel-polyfill');
+require('source-map-support');
 
 const { Exobot, adapters, plugins } = require('../exobot');
-const { Help, Greetings, Permissions } = plugins;
 
-const shell = adapters.Shell;
+const { Help, Greetings, Permissions, Config, Uptime } = plugins;
+const { Shell, HTTP } = adapters;
 
 const bot = new Exobot({
-  adapters: [
-    new shell(),
-  ],
-  plugins: [
-    new Help(),
-    new Greetings(),
-    new Permissions(),
-  ],
+  plugins: {
+    shell: [Shell],
+    http: [HTTP],
+    help: [Help],
+    greetings: [Greetings],
+    permissions: [Permissions],
+    config: [Config],
+    uptime: [Uptime],
+  },
+  //requirePermissions: true
 });
 
 module.exports = bot;

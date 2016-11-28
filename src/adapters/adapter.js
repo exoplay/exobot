@@ -13,46 +13,44 @@ export default class Adapter extends Configurable {
     ERROR: 5,
   }
 
-  get roleMapping () {
+  get roleMapping() {
     return this.options.roleMapping;
   }
 
-  constructor () {
-    super(...arguments);
-    this.status = Adapter.STATUS.UNINITIALIZED;
-  }
+  status = Adapter.STATUS.UNINITIALIZED;
 
-  register (bot) {
+  constructor(options, bot) {
+    super(...arguments);
+
     if (!bot) { throw new Error('No bot passed to register; fatal.'); }
 
     if (!this.name) {
       throw new Error('This adapter has no `name` property; some plugins will not work.');
     }
 
-    this.configure(this.options, bot.log);
-
     this.bot = bot;
     this.initUsers();
     this.status = Adapter.STATUS.CONNECTING;
-    this.listen();
-
   }
 
-  listen () {
-    if (!this.bot) { throw new Error('No bot to listen on; fatal.'); }
-  }
-
-  receive ({ user, text, channel, whisper }) {
+  receive({ user, text, channel, whisper }) {
     if (!text) {
       this.bot.log.info('Message received with undefined text.');
       return;
     }
 
-    const message = this.bot.parseMessage({ user, text, channel, whisper, adapter: this.name });
-    this.bot.emitter.emit('receive-message', message);
+    const message = this.bot.parseMessage({
+      user,
+      text,
+      channel,
+      whisper,
+      adapter: this.name,
+    });
+
+    this.bot.receiveMessage(message);
   }
 
-  receiveWhisper ({ user, text, channel }) {
+  receiveWhisper({ user, text, channel }) {
     if (!text) {
       this.bot.log.warning('Message received with undefined text.');
       return;
@@ -61,7 +59,7 @@ export default class Adapter extends Configurable {
     this.receive({ user, text, channel, whisper: true });
   }
 
-  enter ({ user, channel }) {
+  enter({ user, channel }) {
     const message = new PresenceMessage({
       user,
       channel,
@@ -72,7 +70,7 @@ export default class Adapter extends Configurable {
     this.bot.emitter.emit('enter', message);
   }
 
-  leave ({ user, channel }) {
+  leave({ user, channel }) {
     const message = new PresenceMessage({
       user,
       channel,
@@ -83,29 +81,31 @@ export default class Adapter extends Configurable {
     this.bot.emitter.emit('leave', message);
   }
 
-  send (message) {
+  /* eslint class-methods-use-this: 0, no-console: 0 */
+  send(message) {
     console.log(message.text);
   }
 
-  ping () {
+  ping() {
     this.pong();
   }
 
-  pong () {
+  pong() {
     this.bot.log.warning('Ping received, this.pong() not implemented.');
   }
 
-  getUserIdByUserName (name) {
+  getUserIdByUserName(name) {
     this.bot.log.warning('getUserIdByUserName not implemented by this adapter.');
     return name;
   }
 
-  getRoleIdByRoleName (name) {
+  getRoleIdByRoleName(name) {
     this.bot.log.warning('getRoleIdByRoleName not implemented by this adapter');
     return name;
   }
 
-  getRolesForUser () {
+  /* eslint class-methods-use-this: 0 */
+  getRolesForUser() {
     return [];
   }
 
@@ -129,15 +129,16 @@ export default class Adapter extends Configurable {
     if (!adapterUserId) {
       this.bot.log.error(`Adapter ${this.name} called getUser without adapterUserId`);
     }
+
     if (!adapterUsername) {
       this.bot.log.warning(`Adapter ${this.name} called getUser without adapterUsername`);
     }
 
     const roles = this.getRoles(adapterUserId, adapterUser);
+
     if (this.adapterUsers) {
       if (this.adapterUsers[adapterUserId]) {
         if (roles) {
-          console.log('1');
           this.adapterUsers[adapterUserId].roles = roles;
         }
 
@@ -149,18 +150,23 @@ export default class Adapter extends Configurable {
       }
 
       const user = new User(adapterUsername);
-      user.adapters = {[this.name]: {userId: adapterUserId}};
-      this.adapterUsers[adapterUserId] = {name: adapterUsername,
-                                          botId: user.id,
-                                          roles: roles || []};
-      this.bot.users.botUsers[user.id] = user;
-      this.bot.db.write();
+      user.adapters = { [this.name]: { userId: adapterUserId } };
+
+      this.adapterUsers[adapterUserId] = {
+        name: adapterUsername,
+        botId: user.id,
+        roles: roles || [],
+      };
+
+      this.bot.addUser(user);
       return user;
     }
 
-    return new User(adapterUsername,
-                    adapterUserId,
-                    {[this.name]: adapterUserId});
+    return new User(
+      adapterUsername,
+      adapterUserId,
+      { [this.name]: adapterUserId },
+    );
   }
 
 }

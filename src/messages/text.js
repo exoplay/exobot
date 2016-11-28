@@ -1,7 +1,7 @@
 import Message from './message';
 
 export default class TextMessage extends Message {
-  constructor ({ text, whisper=false, respond=false }) {
+  constructor({ text, whisper = false, respond = false, params = {} }) {
     super(...arguments);
 
     if (text) {
@@ -10,5 +10,6 @@ export default class TextMessage extends Message {
 
     this.whisper = whisper;
     this.respond = respond;
+    this.params = params;
   }
 }

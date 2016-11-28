@@ -1,6 +1,6 @@
 import readline from 'readline';
 
-import { PropTypes as T } from '../../exobot';
+import { PropTypes as T } from '../../configurable';
 import Adapter from '../adapter';
 
 const SHELL = 'SHELL';
@@ -12,26 +12,29 @@ const EXIT_COMMANDS = [
 ];
 
 export default class ShellAdapter extends Adapter {
-  name = 'shell';
+  static type = 'Shell';
 
-  propTypes = {
+  static propTypes = {
     userName: T.string,
   };
 
-  defaultProps = {
+  static defaultProps = {
     userName: 'shell',
   };
 
-  constructor () {
-    super();
+  constructor() {
+    super(...arguments);
+
     this.rl = readline.createInterface({
       input: process.stdin,
       output: process.stdout,
     });
 
+    this.prompt();
+    this.status = Adapter.STATUS.CONNECTED;
   }
 
-  async prompt () {
+  async prompt() {
     this.user = await this.getUser(this.options.userName, this.options.userName);
     this.rl.question('Chat: ', (answer) => {
       if (EXIT_COMMANDS.includes(answer)) {
@@ -48,14 +51,7 @@ export default class ShellAdapter extends Adapter {
     });
   }
 
-  register (bot) {
-    super.register(bot);
-    this.prompt();
-    this.status = Adapter.STATUS.CONNECTED;
-
-  }
-
-  getUserIdByUserName () {
+  getUserIdByUserName() {
     return this.user.id;
   }
 

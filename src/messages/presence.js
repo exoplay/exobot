@@ -6,7 +6,7 @@ export default class PresenceMessage extends Message {
     LEAVE: 1,
   }
 
-  constructor ({ type }) {
+  constructor({ type }) {
     super(...arguments);
     this.type = type;
   }
