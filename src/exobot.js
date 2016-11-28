@@ -40,6 +40,8 @@ export class Exobot extends Configurable {
     requirePermissions: T.bool.isRequired,
     logLevel: T.number,
     alias: T.string,
+    readFile: T.func,
+    writeFile: T.func,
   };
 
   defaultProps = {
