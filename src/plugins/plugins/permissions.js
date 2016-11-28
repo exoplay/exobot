@@ -1,13 +1,13 @@
 import { ChatPlugin, respond, help, permissionGroup } from '../chat';
-import { PropTypes as T } from '../../exobot';
+import { PropTypes as T } from '../../configurable';
 
 import { v4 as uuid } from 'node-uuid';
 
 export class Permissions extends ChatPlugin {
-  name = 'permissions';
-  defaultDatabase = { permissions: {} };
+  static _name = 'permissions';
+  static defaultDatabase = { permissions: {} };
 
-  propTypes = {
+  static propTypes = {
     adminPassword: T.string.isRequired,
   };
 

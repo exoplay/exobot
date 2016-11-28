@@ -6,16 +6,12 @@ export default class Plugin extends Configurable {
   propTypes = null;
   defaultProps = {};
 
-  register (bot) {
-    this.bot = bot;
+  constructor (options, bot) {
+    super(options, bot);
 
-    if (!bot) { throw new Error('No bot passed to register; fatal.'); }
-
-    if (!this.name) {
+    if (!this.constructor._name) {
       throw new Error('This plugin has a missing `name` property.');
     }
-
-    this.configure(this.options, bot);
 
     this.database();
   }

@@ -5,7 +5,7 @@
   "main": "exobot.js",
   "scripts": {
     "build": "exobot build",
-    "watch": "exobot build -w"
+    "watch": "exobot watch"
   },
   "repository": {
     "type": "git",
@@ -21,7 +21,7 @@
   },
   "homepage": "https://github.com/exoplay/exobot#readme",
   "devDependencies": {
-    "babel-polyfill": "^6.16.0"
+    "@exoplay/exobot-build": "^0.0.8"
   },
   "dependencies": {
     "cryptr": "~2.0.0",
@@ -39,8 +39,5 @@
   },
   "peerDependencies": {
     "babel-polyfill": "~6.13.0"
-  },
-  "devDependencies": {
-    "@exoplay/exobot-build": "^0.0.6"
   }
 }

@@ -1,28 +1,13 @@
 import Plugin from './plugin';
 import TextMessage from '../messages/text';
 
-const DEFAULT_REGEXP = /.+/;
-
 export class ChatPlugin extends Plugin {
-  regexp = DEFAULT_REGEXP;
-
   respondFunctions = [];
   listenFunctions = [];
   help = [];
 
-  constructor (options) {
-    super(options);
-    this.options = options;
-  }
-
-  helpText () {
-    return this.help.map(n => `[${this[n].permissionGroup}] ${this[n].help}`);
-  }
-
-  register (bot) {
-    super.register(bot);
-
-    this.bot = bot;
+  constructor (options, bot) {
+    super(...arguments);
 
     if (this.postConstructor) {
       this.postConstructor.forEach(([fn, args]) => fn.call(this, ...args));
@@ -46,7 +31,11 @@ export class ChatPlugin extends Plugin {
       this.listenFunctions
             .filter(([,,name]) => !skipFns.includes(name))
             .forEach(v => this.process(...v, m));
-    });
+    })
+  }
+
+  helpText () {
+    return this.help.map(n => `[${this[n].permissionGroup}] ${this[n].help}`);
   }
 
   async process (validation, response, fnName, message) {
@@ -92,7 +81,7 @@ export class ChatPlugin extends Plugin {
   }
 
   setPermissionGroup (fn, name) {
-    this[fn].permissionGroup = `${this.name}.${name}`;
+    this[fn].permissionGroup = `${this.constructor._name}.${name}`;
   }
 
   validateMessage (regex) {

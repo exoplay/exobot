@@ -42,13 +42,13 @@ const shouldGreet = (m, bot) => getGreetingsRegex(bot).exec(m.text);
 const shouldFarewell = (m, bot) => getFarewellsRegex(bot).exec(m.text);
 
 export class Greetings extends ChatPlugin {
-  name = 'greeting';
-  propTypes = {};
+  static _name = 'greeting';
+  static propTypes = {};
 
   @help('Greets you back when you greet the channel.');
   @permissionGroup('greetings');
-  @listen(shouldGreet)
-  @respond(shouldGreet)
+  @listen(shouldGreet);
+  @respond(shouldGreet);
   greeting (_, message) {
     const randomGreeting = GREETINGS[parseInt(Math.random() * GREETINGS.length)];
     return `${randomGreeting}, ${message.user.name}!`;
@@ -56,8 +56,8 @@ export class Greetings extends ChatPlugin {
 
   @help('Says goodbye when you do.');
   @permissionGroup('greetings');
-  @listen(shouldFarewell)
-  @respond(shouldFarewell)
+  @listen(shouldFarewell);
+  @respond(shouldFarewell);
   farewell (_, message) {
     const randomFarewell = FAREWELLS[parseInt(Math.random() * FAREWELLS.length)];
     return `${randomFarewell}, ${message.user.name}!`;

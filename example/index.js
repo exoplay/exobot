@@ -6,14 +6,12 @@ const { Help, Greetings, Permissions } = plugins;
 const shell = adapters.Shell;
 
 const bot = new Exobot({
-  adapters: [
-    new shell(),
-  ],
   plugins: [
-    new Help(),
-    new Greetings(),
-    new Permissions(),
-  ],
+    [shell],
+    [Help],
+    [Greetings],
+    [Permissions],
+  ]
 });
 
 module.exports = bot;

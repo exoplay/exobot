@@ -1,14 +1,14 @@
 import { ChatPlugin, respond, help, permissionGroup } from '../chat';
 
 export class Help extends ChatPlugin {
-  name = 'help';
-  propTypes = {};
+  static _name = 'help';
+  static propTypes = {};
 
   @help('/help explains commands.');
   @permissionGroup('help');
   @respond(/^help$/i);
   pluginHelp () {
-    return this.bot.plugins
+    return Object.keys(this.bot.plugins).map(p => this.bot.plugins[p])
                     .filter(p => p.help && p.help.length > 0)
                     .map(p => p.helpText().join('\n'), [])
                     .join('\n');
@@ -18,7 +18,7 @@ export class Help extends ChatPlugin {
   @permissionGroup('help');
   @respond(/^help (\w+)$/i);
   pluginHelpSearch ([, search]) {
-    return this.bot.plugins
+    return Object.keys(this.bot.plugins).map(p => this.bot.plugins[p])
                     .filter(p => p.help && p.help.length > 0)
                     .map(p => {
                       return p.helpText().filter(t => {

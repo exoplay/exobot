@@ -14,28 +14,24 @@ import { Configurable, PropTypes as T } from './configurable';
 
 import { Adapter } from './adapters';
 import { Plugin } from './plugins';
-
-// export here for backwards compatibility
-export const PropTypes = T;
+import { DB } from './db';
 
 const http = sapp.patch(superagent);
 const USERS_DB = 'exobot-users';
+const CONFIG_DB = 'exobot-configuration';
+
+const PLUGIN = 'plugins';
+const ADAPTER = 'adapters';
 
 const CLASS_NAME_FOR_CONFIG = 'exobot';
 
-import { DB } from './db';
-
 export class Exobot extends Configurable {
-  plugins = [];
-  adapters = {};
+  static _name = CLASS_NAME_FOR_CONFIG;
 
-  name = CLASS_NAME_FOR_CONFIG;
-
-  propTypes = {
+  static propTypes = {
     name: T.string.isRequired,
     key: T.string.isRequired,
-    adapters: T.arrayOf(T.instanceOf(Adapter)).isRequired,
-    plugins: T.arrayOf(T.instanceOf(Plugin)).isRequired,
+    plugins: T.array.isRequired,
     port: T.number.isRequired,
     requirePermissions: T.bool.isRequired,
     logLevel: T.number,
@@ -44,35 +40,41 @@ export class Exobot extends Configurable {
     writeFile: T.func,
   };
 
-  defaultProps = {
-    name: 'exobot',
-    adapters: [],
+  static defaultProps = {
+    name: CLASS_NAME_FOR_CONFIG,
     plugins: [],
     port: 8080,
     logLevel: Log.WARNING,
     requirePermissions: false,
   }
 
-  constructor (options={}) {
-    super();
+  plugins = {}
+  adapters = {};
 
-    this.log = this.initLog(options.logLevel);
+  constructor (options={}) {
+    const log = new Log(options.logLevel);
+    super(options, undefined, log);
+
+    // Update logLevel if it changed during configuration parsing
+    if (this.options.logLevel !== options.logLevel) {
+      this.log = new Log(this.options.logLevel);
+    } else {
+      this.log = log;
+    }
+
     process.on('unhandledRejection', this.log.critical.bind(this.log));
 
-    this.configure(options, this.log);
+    this.configure();
+    this.initialize();
   }
 
-  configure (options, log) {
-    super.configure(options, log);
-
+  configure () {
     this.botNameRegex =
       new RegExp(`^(?:(?:@?${this.options.name}|${this.options.alias})[,\\s:.-]*)(.+)`, 'i');
 
     this.emitter = new Emitter();
     this.http = http;
     this.requirePermissions = this.options.requirePermissions;
-
-    this.initialize();
   }
 
   async initialize() {
@@ -86,25 +88,21 @@ export class Exobot extends Configurable {
     }
 
     try {
+      this.initDBConfiguration();
       this.initUsers();
-      this.initAdapters(this.options.adapters);
       this.initPlugins(this.options.plugins);
     } catch (e) {
       this.log.critical(e);
     }
   }
 
-  initAdapters (adapters=[]) {
-    adapters.forEach(this.addAdapter);
+  initDBConfiguration () {
+    this.updateConfiguration(this.loadOptions(Exobot));
   }
 
   initPlugins (plugins=[]) {
     this.usePermissions = !!plugins.find(p => p instanceof Permissions);
     plugins.forEach(this.addPlugin);
-  }
-
-  initLog (logLevel) {
-    return new Log(logLevel);
   }
 
   async initDB (key, dbPath, readFile, writeFile) {
@@ -139,7 +137,7 @@ export class Exobot extends Configurable {
       return;
     }
 
-    this.db.set(USERS_DB, {botUsers: {}}).value();
+    this.db.set(USERS_DB, { botUsers: {} }).value();
     this.users = this.db.get(USERS_DB).value();
   }
 
@@ -228,26 +226,31 @@ export class Exobot extends Configurable {
     return false;
   }
 
-  addPlugin = plugin => {
-    const name = plugin.name;
+  addPlugin = ([ PluginClass, opts = {} ]) => {
+    const options = { ...opts, ...this.loadOptions(PluginClass) }
+    let type;
+
+    const plugin = new PluginClass(options, this);
+    const name = PluginClass._name;
+
+    if (plugin instanceof Plugin) { type = PLUGIN; }
+    if (plugin instanceof Adapter) { type = ADAPTER; }
+
+    if (!type) {
+      return this.log.error(
+        `Attempted to initialize "${name}" which is neither a Plugin nor an Adapter.`
+      );
+    }
 
     if (this.getPluginByName(name)) {
       this.log.warning(`Multiple plugins with name "${name}" were initialized.`);
     }
 
-    plugin.register(this);
-    this.plugins.push(plugin);
+    this[type][name] = plugin;
   }
 
-  addAdapter = adapter => {
-    const name = adapter.name;
-
-    if (this.getAdapterByName(name)) {
-      this.log.warning(`Multiple "${name}" adapters were initialized.`);
-    }
-
-    adapter.register(this);
-    this.adapters[adapter.name] = adapter;
+  loadOptions (pluginClass) {
+    return this.db.get(`${CONFIG_DB}.${pluginClass.name}`).value() || {};
   }
 
   send = message => {
@@ -266,20 +269,19 @@ export class Exobot extends Configurable {
     return Object
             .keys(list)
             .map(id => list[id])
-            .find(p => p.name.toLowerCase() === name.toLowerCase());
+            .find(p => p.constructor._name.toLowerCase() === name.toLowerCase());
   }
 
-  getPluginByName = name => {
-    return this.getByName(name, this.plugins);
+  getPluginByName = (name, type = PLUGIN) => {
+    return this[type][name];
   }
-
-  getAdapterByMessage = message => {
-    return this.adapters[message.adapter];
-  }
-
 
   getAdapterByName = name => {
     return this.getByName(name, this.adapters);
+  }
+
+  getAdapterByMessage = message => {
+    return this.getByName(message.adapter, this.adapters);
   }
 
   parseMessage = message => {
