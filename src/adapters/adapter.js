@@ -1,5 +1,5 @@
 import { Configurable } from '../configurable';
-
+import {AdapterOperationTypes as AO} from '../exobot';
 import PresenceMessage from '../messages/presence';
 import User from '../user';
 
@@ -30,6 +30,8 @@ export default class Adapter extends Configurable {
 
     this.bot = bot;
     this.initUsers();
+    this.prompts = {};
+    this.bot.emitter.on(AO.PROMPT_USER, this.promptUser, this);
     this.status = Adapter.STATUS.CONNECTING;
   }
 
@@ -55,7 +57,14 @@ export default class Adapter extends Configurable {
       this.bot.log.warning('Message received with undefined text.');
       return;
     }
-
+    if (this.prompts[user.id]) {
+      this.prompts[user.id].forEach((val, index) => {
+        if (val.cb(val.data,...arguments)) {
+          delete this.prompts[user.id][index];
+          return;
+        }
+      });
+    }
     this.receive({ user, text, channel, whisper: true });
   }
 
@@ -176,6 +185,15 @@ export default class Adapter extends Configurable {
       adapterUserId,
       { [this.name]: adapterUserId },
     );
+  }
+
+  promptUser = (data, cb) => {
+    this.bot.emitter.emit(AO.WHISPER_USER,this.name, data);
+    if (this.prompts[data.userId]) {
+      this.prompts[data.userId].push({data, cb});
+    } else {
+      this.prompts[data.userId] = [{data, cb}];
+    }
   }
 
 }

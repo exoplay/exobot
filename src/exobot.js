@@ -23,6 +23,7 @@ export const AdapterOperationTypes = {
   DISCIPLINE_USER_TEMPORARY: 'AO_discipline_user_temporary',
   DISCIPLINE_USER_PERMANENT: 'AO_discipline_user_permanent',
   WHISPER_USER: 'AO_whisper_user',
+  PROMPT_USER: 'AO_prompt_user',
 };
 
 const http = sapp.patch(superagent);
