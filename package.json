@@ -26,7 +26,6 @@
   "dependencies": {
     "cryptr": "~2.0.0",
     "eventemitter3": "~1.2.0",
-    "fetch-ponyfill": "~2.0.1",
     "fs-extra": "~0.30.0",
     "lodash": "~4.15.0",
     "log": "^1.4.0",
