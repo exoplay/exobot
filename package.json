@@ -5,7 +5,8 @@
   "main": "exobot.js",
   "scripts": {
     "build": "exobot build",
-    "watch": "exobot watch"
+    "watch": "exobot watch",
+    "start": "exobot run --input example/exobot.config.js --output example.js"
   },
   "repository": {
     "type": "git",

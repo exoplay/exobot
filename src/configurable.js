@@ -116,14 +116,22 @@ export class Configurable {
     this.log = log;
 
     this.options = this.constructor.parseConfig(options, log);
+    this.originalOptions = { ...this.options };
 
     if (this.constructor.propTypes && Object.keys(this.constructor.propTypes).length) {
       this.options = this.constructor.validateConfig(this.options, log);
     }
   }
 
-  updateConfiguration (options={}, passThroughErrors) {
-    const merged = this.constructor.parseConfig({ ...this.options, ...options });
+  updateConfiguration (options={}, passThroughErrors = false, overwrite = false) {
+    let merged;
+
+    if (overwrite) {
+      merged = { ...options };
+    } else {
+      merged = this.constructor.parseConfig({ ...this.options, ...options });
+    }
+
     const log = passThroughErrors ? new StubLog() : this.log;
 
     if (this.constructor.propTypes && Object.keys(this.constructor.propTypes).length) {
@@ -131,5 +139,12 @@ export class Configurable {
     } else {
       this.options = merged;
     }
+
+    this.onConfigChange(options, this.options);
+  }
+
+  // this no-op provides a hook for adapters and plugins to re-initialize
+  // themselves on config changes.
+  onConfigChange () {
   }
 }

@@ -3,7 +3,9 @@ import Log from 'log';
 import superagent from 'superagent';
 import sapp from 'superagent-promise-plugin';
 import { intersection } from 'lodash/array';
+import { get } from 'lodash/object';
 import { merge } from 'lodash';
+import path from 'path';
 
 sapp.Promise = Promise;
 
@@ -97,12 +99,32 @@ export class Exobot extends Configurable {
   }
 
   initDBConfiguration () {
-    this.updateConfiguration(this.loadOptions(Exobot));
+    this.updateConfiguration(this.getConfiguration(this.constructor._name));
   }
 
   initPlugins (plugins=[]) {
-    this.usePermissions = !!plugins.find(p => p instanceof Permissions);
-    plugins.forEach(this.addPlugin);
+    const loadedPlugins = plugins.reduce((arr, [p, c]) => {
+      let plugin = p;
+      let config = c;
+
+      if (typeof plugin === 'string')  {
+        // juke out webpack with evil code. use base node require so that
+        // we can autoload plugins.
+        let req = eval('require');
+        const requiredPlugin = req(plugin);
+
+        if (config.import) {
+          plugin = get(requiredPlugin, config.import);
+        }
+      }
+
+      arr.push([plugin, config]);
+      return arr;
+    }, []);
+
+    this.usePermissions = !!loadedPlugins.find(p => p instanceof Permissions);
+
+    loadedPlugins.forEach(([p, o]) => this.addPlugin(p, o));
   }
 
   async initDB (key, dbPath, readFile, writeFile) {
@@ -226,8 +248,12 @@ export class Exobot extends Configurable {
     return false;
   }
 
-  addPlugin = ([ PluginClass, opts = {} ]) => {
-    const options = { ...opts, ...this.loadOptions(PluginClass) }
+  addPlugin (PluginClass, opts) {
+    const options = {
+      ...opts,
+      ...this.getConfiguration(PluginClass._name),
+    }
+
     let type;
 
     const plugin = new PluginClass(options, this);
@@ -249,8 +275,40 @@ export class Exobot extends Configurable {
     this[type][name] = plugin;
   }
 
-  loadOptions (pluginClass) {
-    return this.db.get(`${CONFIG_DB}.${pluginClass.name}`).value() || {};
+  getConfiguration (pluginName, key) {
+    const config = this.db.get(`${CONFIG_DB}.${pluginName}`).value() || {};
+
+    if (key) {
+      return config[key];
+    }
+
+    return config;
+  }
+
+  setConfiguration (pluginName, key, value) {
+    let plugin = this.getPluginByName(pluginName);
+
+    if (!plugin) {
+      plugin = this.getPluginByName(pluginName, ADAPTER);
+    }
+
+    if (plugin) {
+      this.db.set(`${CONFIG_DB}.${pluginName}.${key}`, value).value();
+      plugin.updateConfiguration({ [key]: value });
+    }
+  }
+
+  resetConfiguration (pluginName) {
+    this.db.set(`${CONFIG_DB}.${pluginName}`, {}).value();
+    let plugin = this.getPluginByName(pluginName) || this.getAdapterByName(pluginName);
+
+    if (!pluginName && pluginName === 'exobot') {
+      plugin = this;
+    }
+
+    if (plugin) {
+      plugin.updateConfiguration(plugin.originalOptions, false, true);
+    }
   }
 
   send = message => {
