@@ -1,4 +1,4 @@
-import { ChatPlugin, listen, respond, help, permissionGroup } from '../chat';
+import { Plugin, listen, respond, help, permissionGroup } from '../plugin';
 
 const GREETINGS = [
   'hi',
@@ -41,7 +41,7 @@ const getFarewellsRegex = bot => {
 const shouldGreet = (m, bot) => getGreetingsRegex(bot).exec(m.text);
 const shouldFarewell = (m, bot) => getFarewellsRegex(bot).exec(m.text);
 
-export class Greetings extends ChatPlugin {
+export class Greetings extends Plugin {
   static _name = 'greeting';
   static propTypes = {};
 

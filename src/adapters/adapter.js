@@ -113,7 +113,7 @@ export default class Adapter extends Configurable {
       return;
     }
 
-    this.bot.users[this.name] = {};
+    this.bot.users[this.constructor._name] = {};
     this.adapterUsers = this.bot.users[this.constructor._name];
     this.bot.db.write();
   }
@@ -127,15 +127,16 @@ export default class Adapter extends Configurable {
     if (!adapterUserId) {
       this.bot.log.error(`Adapter ${this.constructor._name} called getUser without adapterUserId`);
     }
+
     if (!adapterUsername) {
       this.bot.log.warning(`Adapter ${this.constructor._name} called getUser without adapterUsername`);
     }
 
     const roles = this.getRoles(adapterUserId, adapterUser);
+
     if (this.adapterUsers) {
       if (this.adapterUsers[adapterUserId]) {
         if (roles) {
-          console.log('1');
           this.adapterUsers[adapterUserId].roles = roles;
         }
 
@@ -155,8 +156,7 @@ export default class Adapter extends Configurable {
         roles: roles || [],
       };
 
-      this.bot.users.botUsers[user.id] = user;
-      this.bot.db.write();
+      this.bot.addUser(user);
       return user;
     }
 

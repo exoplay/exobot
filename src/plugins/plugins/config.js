@@ -1,6 +1,6 @@
-import { ChatPlugin, respond, help, permissionGroup } from '../chat';
+import { Plugin, respond, help, permissionGroup } from '../plugin';
 
-export class Config extends ChatPlugin {
+export class Config extends Plugin {
   static _name = 'config';
   static propTypes = {};
 

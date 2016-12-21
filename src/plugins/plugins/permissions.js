@@ -1,9 +1,10 @@
-import { ChatPlugin, respond, help, permissionGroup } from '../chat';
+import { Plugin, respond, help, permissionGroup } from '../plugin';
 import { PropTypes as T } from '../../configurable';
+import User from '../../user';
 
 import { v4 as uuid } from 'node-uuid';
 
-export class Permissions extends ChatPlugin {
+export class Permissions extends Plugin {
   static _name = 'permissions';
   static defaultDatabase = { permissions: {} };
 
@@ -24,7 +25,7 @@ export class Permissions extends ChatPlugin {
   admin ([, adminPassword], message) {
     // Validate the password - if there is one.
     if (this.options.adminPassword && adminPassword === this.options.adminPassword) {
-      const id = Permissions.nameToId(message.user.id);
+      const id = this.constructor.nameToId(message.user.id);
       this.bot.addRole(id, 'admin');
       return 'User authorized as admin.';
     }
@@ -34,7 +35,7 @@ export class Permissions extends ChatPlugin {
   @permissionGroup('role-management');
   @respond(/^permissions add role (\w+) to (.+)$/i);
   async addRoleToUser ([match, role, name], message) {
-    role = Permissions.nameToId(role);
+    role = this.constructor.nameToId(role);
     let userIdDirty;
 
     try {
@@ -43,7 +44,7 @@ export class Permissions extends ChatPlugin {
       this.bot.log.warn(err);
     }
 
-    const userId = Permissions.nameToId(userIdDirty);
+    const userId = this.constructor.nameToId(userIdDirty);
 
     if (userId) {
       this.bot.addRole(userId, role);
@@ -63,7 +64,7 @@ export class Permissions extends ChatPlugin {
       this.bot.log.warn(err);
     }
 
-    const userId = Permissions.nameToId(userIdDirty);
+    const userId = this.constructor.nameToId(userIdDirty);
 
     if (userId) {
       const perms = this.bot.getRoles(userId);
@@ -83,7 +84,7 @@ export class Permissions extends ChatPlugin {
       this.bot.log.warn(err);
     }
 
-    const userId = Permissions.nameToId(userIdDirty);
+    const userId = this.constructor.nameToId(userIdDirty);
 
     if (userId) {
       const perms = this.bot.getUserRoles(userId);
@@ -95,7 +96,7 @@ export class Permissions extends ChatPlugin {
   @permissionGroup('role-management');
   @respond(/^permissions remove role (\w+) from (.+)$/i);
   async removeRoleFromUser ([match, role, name], message) {
-    role = Permissions.nameToId(role);
+    role = this.constructor.nameToId(role);
     let userIdDirty;
 
     try {
@@ -104,7 +105,7 @@ export class Permissions extends ChatPlugin {
       this.bot.log.warn(err);
     }
 
-    const userId = Permissions.nameToId(userIdDirty);
+    const userId = this.constructor.nameToId(userIdDirty);
 
     if (userId) {
       this.bot.removeRole(userId, role);
@@ -116,7 +117,7 @@ export class Permissions extends ChatPlugin {
   @permissionGroup('role-management');
   @respond(/^permissions add role (\S+) (\w+)$/i);
   addRoleToGroup ([, permissionGroup, role]/*, message*/) {
-    role = Permissions.nameToId(role);
+    role = this.constructor.nameToId(role);
 
     this.bot.db.set(`permissions.groups.${permissionGroup}.${role}`, true).value();
     this.bot.db.write();
@@ -127,7 +128,7 @@ export class Permissions extends ChatPlugin {
   @permissionGroup('role-management');
   @respond(/^permissions remove role (\S+) (\w+)$/i);
   removeRoleFromGroup ([, permissionGroup, role]/*, message*/) {
-    role = Permissions.nameToId(role);
+    role = this.constructor.nameToId(role);
 
     const group = this.bot.db.get(`permissions.groups.${permissionGroup}`).value();
     delete group[role];
@@ -170,4 +171,125 @@ export class Permissions extends ChatPlugin {
             `login ${message.user.id} ${token}`;
   }
 
+  @help('/webhook new <name> to create a webhook user to access webhook commands');
+  @permissionGroup('role-management');
+  @respond(/^webhook new (\S+)$/i);
+  newWebhookUser([, name]) {
+    const user = new User();
+    user.name = `webhook-${name}`;
+    user.token = uuid();
+    user.isWebhook = true;
+    this.bot.addUser(user);
+
+    return `Set up your webhook with token = ${user.token} after giving it ` +
+           `permissions with \`/webhook add role ${user.name} <role>\``;
+  }
+
+  @help('/webhook add role <webhook name> <role> to add a role to a webhook');
+  @permissionGroup('role-management');
+  @respond(/^webhook add role (\S+) (\S+)$/i);
+  addWebhookRole([, name, role]) {
+    role = this.constructor.nameToId(role);
+    let userIdDirty;
+
+    try {
+      userIdDirty = this.bot.getUserIdByUserName(name);
+    } catch (err) {
+      this.bot.log.warn(err);
+    }
+
+    const userId = this.constructor.nameToId(userIdDirty);
+
+    if (userId) {
+      this.bot.addRole(userId, role);
+      return `${name} added to role ${role}.`;
+    }
+  }
+
+  @help('/webhook remove role <webhook name> <role> to remove a role to a webhook');
+  @permissionGroup('role-management');
+  @respond(/^webhook remove role (\S+) (\S+)$/i);
+  removeWebhookRole([, name, role]) {
+    role = this.constructor.nameToId(role);
+    let userIdDirty;
+
+    try {
+      userIdDirty = this.bot.getUserIdByUserName(name);
+    } catch (err) {
+      this.bot.log.warn(err);
+    }
+
+    const userId = this.constructor.nameToId(userIdDirty);
+
+    if (userId) {
+      this.bot.removeRole(userId, role);
+      return `${name} removeed to role ${role}.`;
+    }
+  }
+
+  @help('/webhook view <name> to view a webhook\'s roles');
+  @permissionGroup('role-management');
+  @respond(/^webhook view (\S+)?$/i);
+  viewWebHook([, name]) {
+    let userIdDirty;
+
+    try {
+      userIdDirty = this.bot.getUserIdByUserName(name);
+    } catch (err) {
+      this.bot.log.warn(err);
+    }
+
+    const userId = this.constructor.nameToId(userIdDirty);
+
+    if (userId) {
+      const perms = this.bot.getRoles(userId);
+      return perms.join(', ');
+    }
+  }
+
+  @help('/webhook delete <name> to delete a webhook');
+  @permissionGroup('role-management');
+  @respond(/^webhook delete (\S+)$/i);
+  deleteWebHook([, name]) {
+    let userIdDirty;
+
+    try {
+      userIdDirty = this.bot.getUserIdByUserName(name);
+    } catch (err) {
+      this.bot.log.warn(err);
+    }
+
+    const userId = this.constructor.nameToId(userIdDirty);
+
+    if (userId) {
+      delete this.bot.users.botUsers[userId];
+      this.bot.db.write();
+      return `Webhook ${name} deleted.`;
+    } else {
+      return `Webhook ${name} not found.`;
+    }
+  }
+
+  @help('/webhook regenerate <name> to regenerate a webhook\'s token');
+  @permissionGroup('role-management');
+  @respond(/^webhook regenerate (\S+)$/i);
+  regenerateWebHook([, name]) {
+    let userIdDirty;
+
+    try {
+      userIdDirty = this.bot.getUserIdByUserName(name);
+    } catch (err) {
+      this.bot.log.warn(err);
+    }
+
+    const userId = this.constructor.nameToId(userIdDirty);
+
+    if (userId) {
+      const user = this.bot.users.botUsers[userId];
+      user.token = uuid();
+      this.bot.users.botUsers[userId] = user;
+      this.bot.db.write();
+      return `${name} token is now ${user.token}.`;
+    }
+  }
 }

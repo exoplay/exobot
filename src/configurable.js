@@ -77,14 +77,8 @@ export class Configurable {
   }
 
   static validateConfig (config={}, log) {
-    return Object.keys(config).reduce((validatedConfig, k) => {
-      if (!this.propTypes[k]) {
-        log.warning(`Unrecognized prop ${k} passed into options of ${this._name} plugin`);
-        validatedConfig[k] = config[k];
-        return validatedConfig;
-      }
-
-      const err = this.propTypes[k](config, k, `${this._name} config`, 'property');
+    return Object.keys(this.propTypes).reduce((validatedConfig, k) => {
+      const err = this.propTypes[k](config, k, `${this._name} config`, 'prop');
 
       if (err) {
         log.warning(err.toString());

@@ -1,4 +1,4 @@
-import { ChatPlugin, respond, help, permissionGroup } from '../chat';
+import { Plugin, respond, help, permissionGroup, get } from '../plugin';
 
 const start = new Date();
 
@@ -7,13 +7,14 @@ const MINUTES = SECONDS * 60;
 const HOURS = MINUTES * 60;
 const DAYS = HOURS * 24
 
-export class Uptime extends ChatPlugin {
+export class Uptime extends Plugin {
   static _name = 'uptime';
   static propTypes = {};
 
   @help('/uptime shows time since last restart.');
   @permissionGroup('uptime');
   @respond(/^uptime/i);
+  @get('/uptime');
   pluginUptime () {
     const now = new Date();
     let diff = now - start;

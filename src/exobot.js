@@ -17,6 +17,7 @@ import { Configurable, PropTypes as T } from './configurable';
 import { Adapter } from './adapters';
 import { Plugin } from './plugins';
 import { DB } from './db';
+import { server, router } from './http';
 
 const http = sapp.patch(superagent);
 const USERS_DB = 'exobot-users';
@@ -40,14 +41,19 @@ export class Exobot extends Configurable {
     alias: T.string,
     readFile: T.func,
     writeFile: T.func,
+    enableRouter: T.bool,
+    httpServer: T.object,
+    router: T.object,
+    httpPrefix: T.string,
   };
 
   static defaultProps = {
     name: CLASS_NAME_FOR_CONFIG,
     plugins: [],
-    port: 8080,
+    port: 3000,
     logLevel: Log.WARNING,
     requirePermissions: false,
+    enableRouter: true,
   }
 
   plugins = {}
@@ -66,8 +72,29 @@ export class Exobot extends Configurable {
 
     process.on('unhandledRejection', this.log.critical.bind(this.log));
 
+    this.buildServer();
     this.configure();
     this.initialize();
+  }
+
+  buildServer() {
+    if (this.options.httpServer) {
+      this.server = this.options.httpServer;
+      delete this.options.httpServer;
+    } else if (this.options.enableRouter) {
+      this.server = server({
+        port: this.options.port
+      });
+    }
+
+    if (this.options.router) {
+      this.router = this.options.router;
+      delete this.options.router;
+    } else {
+      this.router = router({
+        prefix: this.options.httpPrefix,
+      });
+    }
   }
 
   configure () {
@@ -96,6 +123,22 @@ export class Exobot extends Configurable {
     } catch (e) {
       this.log.critical(e);
     }
+
+    console.log('listening on', this.options.port);
+    this.server.listen(this.options.port);
+
+    this.server.use(this.router.routes());
+    this.server.use(this.router.allowedMethods());
+  }
+
+  shutdown() {
+    Object.keys(this.adapters).forEach(k => {
+      this.adapters[k].shutdown();
+    });
+
+    Object.keys(this.plugins).forEach(k => {
+      this.adapters[k].shutdown();
+    });
   }
 
   initDBConfiguration () {
@@ -121,8 +164,6 @@ export class Exobot extends Configurable {
       arr.push([plugin, config]);
       return arr;
     }, []);
-
-    this.usePermissions = !!loadedPlugins.find(p => p instanceof Permissions);
 
     loadedPlugins.forEach(([p, o]) => this.addPlugin(p, o));
   }
@@ -180,6 +221,11 @@ export class Exobot extends Configurable {
     }
   }
 
+  addUser (user) {
+    this.users.botUsers[user.id] = user;
+    this.db.write();
+  }
+
   addRole = (userId, roleName) => {
     this.users.botUsers[userId].roles[roleName] = true;
     this.db.write();
@@ -212,7 +258,7 @@ export class Exobot extends Configurable {
     }
   }
 
-  async checkPermissions (userId, commandPermissionGroup) {
+  checkPermissions (userId, commandPermissionGroup) {
     if (!this.usePermissions) { return true; }
     // special group for admin authorization - otherwise you could never auth
     // in the first place when public commands are disabled
@@ -248,6 +294,20 @@ export class Exobot extends Configurable {
     return false;
   }
 
+  getUserIdByUserName (name) {
+    return Object.keys(this.users.botUsers)
+                   .find(id => this.users.botUsers[id].name.toLowerCase() === name.toLowerCase());
+  }
+
+  checkPermissionsByToken (token, commandPermissionGroup) {
+    if (!token) { return; }
+
+    let userId = Object.keys(this.users.botUsers)
+                           .find(id => this.users.botUsers[id].token === token);
+
+    return this.checkPermissions(userId, commandPermissionGroup);
+  }
+
   addPlugin (PluginClass, opts) {
     const options = {
       ...opts,
@@ -257,6 +317,11 @@ export class Exobot extends Configurable {
     let type;
 
     const plugin = new PluginClass(options, this);
+
+    if (plugin instanceof Permissions) {
+      this.usePermissions = true;
+    }
+
     const name = PluginClass._name;
 
     if (plugin instanceof Plugin) { type = PLUGIN; }
