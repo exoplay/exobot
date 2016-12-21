@@ -42,7 +42,7 @@ const shouldGreet = (m, bot) => getGreetingsRegex(bot).exec(m.text);
 const shouldFarewell = (m, bot) => getFarewellsRegex(bot).exec(m.text);
 
 export class Greetings extends Plugin {
-  static _name = 'greeting';
+  static type = 'greeting';
   static propTypes = {};
 
   @help('Greets you back when you greet the channel.');

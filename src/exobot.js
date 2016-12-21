@@ -17,7 +17,6 @@ import { Configurable, PropTypes as T } from './configurable';
 import { Adapter } from './adapters';
 import { Plugin } from './plugins';
 import { DB } from './db';
-import { server, router } from './http';
 
 const http = sapp.patch(superagent);
 const USERS_DB = 'exobot-users';
@@ -29,28 +28,24 @@ const ADAPTER = 'adapters';
 const CLASS_NAME_FOR_CONFIG = 'exobot';
 
 export class Exobot extends Configurable {
-  static _name = CLASS_NAME_FOR_CONFIG;
+  static type = CLASS_NAME_FOR_CONFIG;
 
   static propTypes = {
     name: T.string.isRequired,
     key: T.string.isRequired,
-    plugins: T.array.isRequired,
-    port: T.number.isRequired,
+    plugins: T.object.isRequired,
     requirePermissions: T.bool.isRequired,
     logLevel: T.number,
     alias: T.string,
     readFile: T.func,
     writeFile: T.func,
     enableRouter: T.bool,
-    httpServer: T.object,
-    router: T.object,
     httpPrefix: T.string,
   };
 
   static defaultProps = {
     name: CLASS_NAME_FOR_CONFIG,
-    plugins: [],
-    port: 3000,
+    plugins: {},
     logLevel: Log.WARNING,
     requirePermissions: false,
     enableRouter: true,
@@ -72,29 +67,8 @@ export class Exobot extends Configurable {
 
     process.on('unhandledRejection', this.log.critical.bind(this.log));
 
-    this.buildServer();
     this.configure();
     this.initialize();
-  }
-
-  buildServer() {
-    if (this.options.httpServer) {
-      this.server = this.options.httpServer;
-      delete this.options.httpServer;
-    } else if (this.options.enableRouter) {
-      this.server = server({
-        port: this.options.port
-      });
-    }
-
-    if (this.options.router) {
-      this.router = this.options.router;
-      delete this.options.router;
-    } else {
-      this.router = router({
-        prefix: this.options.httpPrefix,
-      });
-    }
   }
 
   configure () {
@@ -123,12 +97,6 @@ export class Exobot extends Configurable {
     } catch (e) {
       this.log.critical(e);
     }
-
-    console.log('listening on', this.options.port);
-    this.server.listen(this.options.port);
-
-    this.server.use(this.router.routes());
-    this.server.use(this.router.allowedMethods());
   }
 
   shutdown() {
@@ -142,13 +110,12 @@ export class Exobot extends Configurable {
   }
 
   initDBConfiguration () {
-    this.updateConfiguration(this.getConfiguration(this.constructor._name));
+    this.updateConfiguration(this.getConfiguration(this.name));
   }
 
-  initPlugins (plugins=[]) {
-    const loadedPlugins = plugins.reduce((arr, [p, c]) => {
-      let plugin = p;
-      let config = c;
+  initPlugins (plugins={}) {
+    const loadedPlugins = Object.keys(plugins).reduce((p, k) => {
+      let [plugin, config] = plugins[k];
 
       if (typeof plugin === 'string')  {
         // juke out webpack with evil code. use base node require so that
@@ -161,11 +128,11 @@ export class Exobot extends Configurable {
         }
       }
 
-      arr.push([plugin, config]);
-      return arr;
-    }, []);
+      p[k] = [plugin, config];
+      return p;
+    }, {});
 
-    loadedPlugins.forEach(([p, o]) => this.addPlugin(p, o));
+    Object.keys(loadedPlugins).forEach(k => this.addPlugin(k, ...loadedPlugins[k]));
   }
 
   async initDB (key, dbPath, readFile, writeFile) {
@@ -308,10 +275,10 @@ export class Exobot extends Configurable {
     return this.checkPermissions(userId, commandPermissionGroup);
   }
 
-  addPlugin (PluginClass, opts) {
+  addPlugin (name, PluginClass, opts) {
     const options = {
       ...opts,
-      ...this.getConfiguration(PluginClass._name),
+      ...this.getConfiguration(name),
     }
 
     let type;
@@ -321,8 +288,6 @@ export class Exobot extends Configurable {
     if (plugin instanceof Permissions) {
       this.usePermissions = true;
     }
-
-    const name = PluginClass._name;
 
     if (plugin instanceof Plugin) { type = PLUGIN; }
     if (plugin instanceof Adapter) { type = ADAPTER; }
@@ -354,7 +319,7 @@ export class Exobot extends Configurable {
     let plugin = this.getPluginByName(pluginName);
 
     if (!plugin) {
-      plugin = this.getPluginByName(pluginName, ADAPTER);
+      plugin = this.getAdapterByName(pluginName);
     }
 
     if (plugin) {
@@ -389,14 +354,11 @@ export class Exobot extends Configurable {
   }
 
   getByName = (name, list) => {
-    return Object
-            .keys(list)
-            .map(id => list[id])
-            .find(p => p.constructor._name.toLowerCase() === name.toLowerCase());
+    return list[name];
   }
 
   getPluginByName = (name, type = PLUGIN) => {
-    return this[type][name];
+    return this.getByName(name, this.plugins);
   }
 
   getAdapterByName = name => {

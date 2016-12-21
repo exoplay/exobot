@@ -7,14 +7,14 @@ const { Help, Greetings, Permissions, Config, Uptime } = plugins;
 const shell = adapters.Shell;
 
 const bot = new Exobot({
-  plugins: [
-    [shell],
-    [Help],
-    [Greetings],
-    [Permissions],
-    [Config],
-    [Uptime],
-  ],
+  plugins: {
+    shell: [shell],
+    help: [Help],
+    greetings: [Greetings],
+    permissions: [Permissions],
+    config: [Config],
+    uptime: [Uptime],
+  },
   requirePermissions: true
 });
 

@@ -21,8 +21,9 @@ export class StubLog {
 export class Configurable {
   static propTypes = undefined;
   static defaultProps = {};
+  static type = 'Configurable';
 
-  static parseConfig (options={}, log) {
+  static parseConfig (name=this.type, options={}, log) {
     if (!this.propTypes) { return options; }
 
     const optionKeys = Object.keys(options);
@@ -34,7 +35,7 @@ export class Configurable {
             .filter(k => !optionKeys.includes(k))
             .reduce((c, k) => {
               // loop through any keys not passed in as properties
-              const env = this.processEnv(k, this.propTypes[k]);
+              const env = this.processEnv(name, k, this.propTypes[k]);
               if (env) { c[k] = env; }
 
               return c;
@@ -44,9 +45,8 @@ export class Configurable {
     };
   }
 
-  static processEnv (key, propType) {
-    //process.env[this.envify(k)
-    let val = process.env[this.envify(key)];
+  static processEnv (name, key, propType) {
+    let val = process.env[this.envify(name, key)];
 
     if (!val) { return val; }
     if (!propType) { return val; }
@@ -76,9 +76,9 @@ export class Configurable {
     }
   }
 
-  static validateConfig (config={}, log) {
+  static validateConfig (name, config={}, log) {
     return Object.keys(this.propTypes).reduce((validatedConfig, k) => {
-      const err = this.propTypes[k](config, k, `${this._name} config`, 'prop');
+      const err = this.propTypes[k](config, k, `${name} config`, 'prop');
 
       if (err) {
         log.warning(err.toString());
@@ -98,22 +98,30 @@ export class Configurable {
   }
 
   // turn a key like myKey into PLUGINNAME_MY_KEY
-  static envify (key='') {
+  static envify (name, key='') {
     return [
-      this._name,
+      name,
       key.replace(KEY_REGEX, l => l.split('').join('_')),
     ].join('_').toUpperCase();
+  }
+
+  get name () {
+    if (this.options && this.options.name) {
+      return this.options.name;
+    }
+
+    return this.constructor.type;
   }
 
   constructor (options, bot, log=bot.log) {
     this.bot = bot;
     this.log = log;
 
-    this.options = this.constructor.parseConfig(options, log);
+    this.options = this.constructor.parseConfig(options.name, options, log);
     this.originalOptions = { ...this.options };
 
     if (this.constructor.propTypes && Object.keys(this.constructor.propTypes).length) {
-      this.options = this.constructor.validateConfig(this.options, log);
+      this.options = this.constructor.validateConfig(this.name, this.options, log);
     }
   }
 
@@ -123,13 +131,13 @@ export class Configurable {
     if (overwrite) {
       merged = { ...options };
     } else {
-      merged = this.constructor.parseConfig({ ...this.options, ...options });
+      merged = this.constructor.parseConfig(this.name, { ...this.options, ...options });
     }
 
     const log = passThroughErrors ? new StubLog() : this.log;
 
     if (this.constructor.propTypes && Object.keys(this.constructor.propTypes).length) {
-      this.options = this.constructor.validateConfig(merged, log);
+      this.options = this.constructor.validateConfig(this.name, merged, log);
     } else {
       this.options = merged;
     }

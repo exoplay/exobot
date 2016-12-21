@@ -5,7 +5,7 @@ import User from '../../user';
 import { v4 as uuid } from 'node-uuid';
 
 export class Permissions extends Plugin {
-  static _name = 'permissions';
+  static type = 'permissions';
   static defaultDatabase = { permissions: {} };
 
   static propTypes = {
@@ -94,7 +94,7 @@ export class Permissions extends Plugin {
 
   @help('/permissions remove role <role> from <user> to remove a role from a user');
   @permissionGroup('role-management');
-  @respond(/^permissions remove role (\w+) from (.+)$/i);
+  @respond(/^permissions remove role (\S+) from (.+)$/i);
   async removeRoleFromUser ([match, role, name], message) {
     role = this.constructor.nameToId(role);
     let userIdDirty;
@@ -115,7 +115,7 @@ export class Permissions extends Plugin {
 
   @help('/permissions add role <permissiongroup> <role> to allow access to a permissionGroup');
   @permissionGroup('role-management');
-  @respond(/^permissions add role (\S+) (\w+)$/i);
+  @respond(/^permissions add role (\S+) (\S+)$/i);
   addRoleToGroup ([, permissionGroup, role]/*, message*/) {
     role = this.constructor.nameToId(role);
 
@@ -126,7 +126,7 @@ export class Permissions extends Plugin {
 
   @help('/permissions remove group <permissionGroup> <role> to allow access to a permissionGroup');
   @permissionGroup('role-management');
-  @respond(/^permissions remove role (\S+) (\w+)$/i);
+  @respond(/^permissions remove role (\S+) (\S+)$/i);
   removeRoleFromGroup ([, permissionGroup, role]/*, message*/) {
     role = this.constructor.nameToId(role);
 

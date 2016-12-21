@@ -1,7 +1,7 @@
 import { Plugin, respond, help, permissionGroup } from '../plugin';
 
 export class Config extends Plugin {
-  static _name = 'config';
+  static type = 'config';
   static propTypes = {};
 
   @help('/config set <pluginname> <key> <value> updates plugin configuration.');

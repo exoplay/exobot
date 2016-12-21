@@ -24,7 +24,7 @@ export default class Adapter extends Configurable {
 
     if (!bot) { throw new Error('No bot passed to register; fatal.'); }
 
-    if (!this.constructor._name) {
+    if (!this.name) {
       throw new Error('This adapter has no `name` property; some plugins will not work.');
     }
 
@@ -44,7 +44,7 @@ export default class Adapter extends Configurable {
       text,
       channel,
       whisper,
-      adapter: this.constructor._name
+      adapter: this.name
     });
 
     this.bot.emitter.emit('receive-message', message);
@@ -63,7 +63,7 @@ export default class Adapter extends Configurable {
     const message = new PresenceMessage({
       user,
       channel,
-      adapter: this.constructor._name,
+      adapter: this.name,
       type: PresenceMessage.TYPES.ENTER,
     });
 
@@ -74,7 +74,7 @@ export default class Adapter extends Configurable {
     const message = new PresenceMessage({
       user,
       channel,
-      adapter: this.constructor._name,
+      adapter: this.name,
       type: PresenceMessage.TYPES.LEAVE,
     });
 
@@ -108,13 +108,13 @@ export default class Adapter extends Configurable {
   }
 
   async initUsers() {
-    this.adapterUsers = this.bot.users[this.constructor._name];
+    this.adapterUsers = this.bot.users[this.name];
     if (this.adapterUsers) {
       return;
     }
 
-    this.bot.users[this.constructor._name] = {};
-    this.adapterUsers = this.bot.users[this.constructor._name];
+    this.bot.users[this.name] = {};
+    this.adapterUsers = this.bot.users[this.name];
     this.bot.db.write();
   }
 
@@ -125,11 +125,11 @@ export default class Adapter extends Configurable {
 
   async getUser(adapterUserId, adapterUsername, adapterUser = {}) {
     if (!adapterUserId) {
-      this.bot.log.error(`Adapter ${this.constructor._name} called getUser without adapterUserId`);
+      this.bot.log.error(`Adapter ${this.name} called getUser without adapterUserId`);
     }
 
     if (!adapterUsername) {
-      this.bot.log.warning(`Adapter ${this.constructor._name} called getUser without adapterUsername`);
+      this.bot.log.warning(`Adapter ${this.name} called getUser without adapterUsername`);
     }
 
     const roles = this.getRoles(adapterUserId, adapterUser);
@@ -148,7 +148,7 @@ export default class Adapter extends Configurable {
       }
 
       const user = new User(adapterUsername);
-      user.adapters = { [this.constructor._name]: { userId: adapterUserId } };
+      user.adapters = { [this.name]: { userId: adapterUserId } };
 
       this.adapterUsers[adapterUserId] = {
         name: adapterUsername,
@@ -163,7 +163,7 @@ export default class Adapter extends Configurable {
     return new User(
       adapterUsername,
       adapterUserId,
-      { [this.constructor._name]: adapterUserId }
+      { [this.name]: adapterUserId }
     );
   }
 

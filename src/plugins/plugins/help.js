@@ -1,15 +1,16 @@
 import { Plugin, respond, help, permissionGroup } from '../plugin';
 
 export class Help extends Plugin {
-  static _name = 'help';
+  static type = 'help';
   static propTypes = {};
 
   @help('/help explains commands.');
   @permissionGroup('help');
   @respond(/^help$/i);
   pluginHelp () {
+    console.log(Object.keys(this.bot.plugins).map(p => this.bot.plugins[p]).map(p => p.constructor.help))
     return Object.keys(this.bot.plugins).map(p => this.bot.plugins[p])
-                    .filter(p => p.help && p.help.length > 0)
+                    .filter(p => p.constructor.help && p.constructor.help.length > 0)
                     .map(p => p.helpText().join('\n'), [])
                     .join('\n');
   }
@@ -19,7 +20,7 @@ export class Help extends Plugin {
   @respond(/^help (\w+)$/i);
   pluginHelpSearch ([, search]) {
     return Object.keys(this.bot.plugins).map(p => this.bot.plugins[p])
-                    .filter(p => p.help && p.help.length > 0)
+                    .filter(p => p.constructor.help && p.constructor.help.length > 0)
                     .map(p => {
                       return p.helpText().filter(t => {
                         return t.toLowerCase().indexOf(search.toLowerCase()) > -1;

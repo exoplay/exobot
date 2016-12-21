@@ -8,13 +8,12 @@ const HOURS = MINUTES * 60;
 const DAYS = HOURS * 24
 
 export class Uptime extends Plugin {
-  static _name = 'uptime';
+  static type = 'uptime';
   static propTypes = {};
 
   @help('/uptime shows time since last restart.');
   @permissionGroup('uptime');
   @respond(/^uptime/i);
-  @get('/uptime');
   pluginUptime () {
     const now = new Date();
     let diff = now - start;

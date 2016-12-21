@@ -7,15 +7,14 @@ export class Plugin extends Configurable {
 
   respondFunctions = [];
   listenFunctions = [];
-  httpFunctions = [];
 
   help = [];
 
   constructor (options, bot) {
     super(options, bot);
 
-    if (!this.constructor._name) {
-      throw new Error('This plugin has a missing `name` property.');
+    if (!this.name) {
+      throw new Error('This plugin has a missing `type` and/or options.name  property.');
     }
 
     if (this.postConstructor) {
@@ -81,10 +80,18 @@ export class Plugin extends Configurable {
   }
 
   respond (validation, fn, name) {
+    if (!fn.permissionGroup) {
+      fn.permissionGoup = `${this.name}.${name}`;
+    }
+
     this.respondFunctions.push([validation, fn, name]);
   }
 
   listen (validation, fn, name) {
+    if (!fn.permissionGroup) {
+      fn.permissionGoup = `${this.name}.${name}`;
+    }
+
     this.listenFunctions.push([validation, fn, name]);
   }
 
@@ -114,33 +121,12 @@ export class Plugin extends Configurable {
   }
 
   setPermissionGroup (fn, name) {
-    this[fn].permissionGroup = `${this.constructor._name}.${name}`;
-  }
-
-  http (method, route, fn, name) {
-    this.bot.router[method](route, async (ctx) => {
-      const params = {
-        ...ctx.params,
-        ...ctx.query,
-        ...ctx.body,
-      };
-
-      if (this.checkPermissionsByToken(params.token, this[name].permissionGroup)) {
-        return ctx.body = await fn(params);
-      }
-
-      return ctx.status = 403;
-    });
+    this[fn].permissionGroup = `${this.name}.${name}`;
   }
 }
 
 export const listen = (validation) => (target, name, descriptor) => {
   const fn = descriptor.value;
-
-  if (!fn.permissionGroup) {
-    fn.permissionGoup = `${target.name}.${name}`;
-  }
-
   target.postConstructor = target.postConstructor || [];
   target.postConstructor.push(
     [target.listen, [validation, fn, name]]
@@ -149,11 +135,6 @@ export const listen = (validation) => (target, name, descriptor) => {
 
 export const respond = (validation) => (target, name, descriptor) => {
   const fn = descriptor.value;
-
-  if (!fn.permissionGroup) {
-    fn.permissionGoup = `${target.name}.${name}`;
-  }
-
   target.postConstructor = target.postConstructor || [];
   target.postConstructor.push(
     [target.respond, [validation, fn, name]]
@@ -169,33 +150,3 @@ export const help = (text) => (target, fnName) => {
 export const permissionGroup = (name) => (target, fnName) => {
   target.postConstructor.push([target.setPermissionGroup, [fnName, name] ]);
 };
-
-export const get = (route) => (target, name, descriptor) => {
-  const fn = descriptor.value;
-  target.postConstructor = target.postConstructor || [];
-  target.postConstructor.push([target.http, ['get', route, fn, name]])
-}
-
-export const post = (route) => (target, name, descriptor) => {
-  const fn = descriptor.value;
-  target.postConstructor = target.postConstructor || [];
-  target.postConstructor.push([target.http, ['post', route, fn, name]])
-}
-
-export const put = (route) => (target, name, descriptor) => {
-  const fn = descriptor.value;
-  target.postConstructor = target.postConstructor || [];
-  target.postConstructor.push([target.http, ['put', route, fn, name]])
-}
-
-export const patch = (route) => (target, name, descriptor) => {
-  const fn = descriptor.value;
-  target.postConstructor = target.postConstructor || [];
-  target.postConstructor.push([target.http, ['patch', route, fn, name]])
-}
-
-export const del = (route) => (target, name, descriptor) => {
-  const fn = descriptor.value;
-  target.postConstructor = target.postConstructor || [];
-  target.postConstructor.push([target.http, ['del', route, fn, name]])
-}
