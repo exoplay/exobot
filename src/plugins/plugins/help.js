@@ -8,7 +8,6 @@ export class Help extends Plugin {
   @permissionGroup('help');
   @respond(/^help$/i);
   pluginHelp () {
-    console.log(Object.keys(this.bot.plugins).map(p => this.bot.plugins[p]).map(p => p.constructor.help))
     return Object.keys(this.bot.plugins).map(p => this.bot.plugins[p])
                     .filter(p => p.constructor.help && p.constructor.help.length > 0)
                     .map(p => p.helpText().join('\n'), [])

@@ -11,7 +11,7 @@ const bot = new Exobot({
     shell: [shell],
     help: [Help],
     greetings: [Greetings],
-    permissions: [Permissions],
+    //permissions: [Permissions],
     config: [Config],
     uptime: [Uptime],
   },

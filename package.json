@@ -22,7 +22,7 @@
   },
   "homepage": "https://github.com/exoplay/exobot#readme",
   "devDependencies": {
-    "@exoplay/exobot-build": "^0.0.8"
+    "@exoplay/exobot-build": "^0.1.0"
   },
   "dependencies": {
     "cryptr": "~2.0.0",

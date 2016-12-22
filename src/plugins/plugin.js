@@ -5,10 +5,17 @@ export class Plugin extends Configurable {
   static propTypes = null;
   static defaultProps = {};
 
-  respondFunctions = [];
-  listenFunctions = [];
+  get listeners () {
+    return this.constructor.listenFunctions || [];
+  }
 
-  help = [];
+  get responders () {
+    return this.constructor.respondFunctions || [];
+  }
+
+  permissionGroup(fnName) {
+    return `${this.name}.${this[fnName].permissionGroup}`;
+  }
 
   constructor (options, bot) {
     super(options, bot);
@@ -23,10 +30,10 @@ export class Plugin extends Configurable {
 
     this.database();
 
-    bot.emitter.on('receive-message', this.receiveMessage);
+    bot.emitter.on('receive-message', this.receiveMessage.bind(this));
   }
 
-  receiveMessage = (message) => {
+  receiveMessage (message) {
     // v = [
     //   validation function or regex,
     //   the response function from the plugin,
@@ -37,11 +44,11 @@ export class Plugin extends Configurable {
     let skipFns = [];
 
     if (message.respond) {
-      this.respondFunctions.forEach(v => this.process(...v, message));
-      skipFns = this.respondFunctions.map(([,,name]) => name);
+      this.responders.forEach(v => this.process(...v, message));
+      skipFns = this.responders.map(([,,name]) => name);
     }
 
-    this.listenFunctions
+    this.listeners
           .filter(([,,name]) => !skipFns.includes(name))
           .forEach(v => this.process(...v, message));
   }
@@ -52,7 +59,7 @@ export class Plugin extends Configurable {
       const res = fn(message, this.bot);
 
       if (res) {
-        if (await this.checkPermissions(message.user.id, this[fnName].permissionGroup)) {
+        if (await this.checkPermissions(message.user.id, this.permissionGroup(fnName))) {
           const text = response.call(this, res, message);
           if (!text) { return; }
 
@@ -84,15 +91,14 @@ export class Plugin extends Configurable {
       fn.permissionGoup = `${this.name}.${name}`;
     }
 
-    this.respondFunctions.push([validation, fn, name]);
+    //this.constructor.respondFunctions.push([validation, fn, name]);
+    this.constructor.respond(validation, fn, name);
   }
 
   listen (validation, fn, name) {
-    if (!fn.permissionGroup) {
-      fn.permissionGoup = `${this.name}.${name}`;
-    }
 
-    this.listenFunctions.push([validation, fn, name]);
+    //this.constructor.listenFunctions.push([validation, fn, name]);
+    this.constructor.listen(validation, fn, name);
   }
 
   validateMessage (regex) {
@@ -112,41 +118,50 @@ export class Plugin extends Configurable {
   }
 
   helpText () {
-    return this.help.map(n => `[${this[n].permissionGroup}] ${this[n].help}`);
-  }
-
-  setHelp (text, fnName) {
-    this.help.push(fnName);
-    this[fnName].help = text;
-  }
-
-  setPermissionGroup (fn, name) {
-    this[fn].permissionGroup = `${this.name}.${name}`;
+    return this.constructor.help.map(n =>
+      `[${this.permissionGroup(n)}] ${this[n].help}`
+    );
   }
 }
 
 export const listen = (validation) => (target, name, descriptor) => {
   const fn = descriptor.value;
-  target.postConstructor = target.postConstructor || [];
-  target.postConstructor.push(
-    [target.listen, [validation, fn, name]]
-  );
+
+  if (!fn.permissionGroup) {
+    fn.permissionGoup = name;
+  }
+
+  if (!target.constructor.listenFunctions) {
+    target.constructor.listenFunctions = [];
+  }
+
+  target.constructor.listenFunctions.push([validation, fn, name]);
 };
 
 export const respond = (validation) => (target, name, descriptor) => {
   const fn = descriptor.value;
-  target.postConstructor = target.postConstructor || [];
-  target.postConstructor.push(
-    [target.respond, [validation, fn, name]]
-  );
+
+  if (!fn.permissionGroup) {
+    fn.permissionGoup = name;
+  }
+
+  if (!target.constructor.respondFunctions) {
+    target.constructor.respondFunctions = [];
+  }
+
+  target.constructor.respondFunctions.push([validation, fn, name]);
 };
 
-export const help = (text) => (target, fnName) => {
-  target.postConstructor.push(
-    [target.setHelp, [text, fnName]]
-  );
+export const help = (text) => (target, fnName, descriptor) => {
+  descriptor.value.help = text;
+
+  if (!target.constructor.help) {
+    target.constructor.help = [];
+  }
+
+  target.constructor.help.push(fnName);
 };
 
-export const permissionGroup = (name) => (target, fnName) => {
-  target.postConstructor.push([target.setPermissionGroup, [fnName, name] ]);
+export const permissionGroup = (group) => (target, fnName, descriptor) => {
+  descriptor.value.permissionGroup = group;
 };
