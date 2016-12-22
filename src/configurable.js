@@ -13,7 +13,9 @@ export class StubLog {
 
   constructor () {
     Object.keys(Log).forEach(key => {
-      this[key.toLowerCase()] = msg => this.logs[key.toLowerCase()] = msg;
+      this[key.toLowerCase()] = (msg) => {
+        this.logs[key.toLowerCase()] = msg;
+      };
     });
   }
 }
@@ -23,7 +25,7 @@ export class Configurable {
   static defaultProps = {};
   static type = 'Configurable';
 
-  static parseConfig (name=this.type, options={}, log) {
+  static parseConfig (name=this.type, options={}) {
     if (!this.propTypes) { return options; }
 
     const optionKeys = Object.keys(options);

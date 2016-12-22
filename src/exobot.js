@@ -5,7 +5,6 @@ import sapp from 'superagent-promise-plugin';
 import { intersection } from 'lodash/array';
 import { get } from 'lodash/object';
 import { merge } from 'lodash';
-import path from 'path';
 
 sapp.Promise = Promise;
 
@@ -115,12 +114,14 @@ export class Exobot extends Configurable {
 
   initPlugins (plugins={}) {
     const loadedPlugins = Object.keys(plugins).reduce((p, k) => {
-      let [plugin, config] = plugins[k];
+      const [,config] = plugins[k];
+      let [plugin] = plugins[k];
 
-      if (typeof plugin === 'string')  {
+      if (typeof plugin === 'string') {
         // juke out webpack with evil code. use base node require so that
         // we can autoload plugins.
-        let req = eval('require');
+        /* eslint no-eval: 0 */ // shhhhhhhhh
+        const req = eval('require');
         const requiredPlugin = req(plugin);
 
         if (config.import) {
@@ -269,7 +270,7 @@ export class Exobot extends Configurable {
   checkPermissionsByToken (token, commandPermissionGroup) {
     if (!token) { return; }
 
-    let userId = Object.keys(this.users.botUsers)
+    const userId = Object.keys(this.users.botUsers)
                            .find(id => this.users.botUsers[id].token === token);
 
     return this.checkPermissions(userId, commandPermissionGroup);
@@ -279,7 +280,7 @@ export class Exobot extends Configurable {
     const options = {
       ...opts,
       ...this.getConfiguration(name),
-    }
+    };
 
     let type;
 
@@ -357,7 +358,7 @@ export class Exobot extends Configurable {
     return list[name];
   }
 
-  getPluginByName = (name, type = PLUGIN) => {
+  getPluginByName = (name) => {
     return this.getByName(name, this.plugins);
   }
 
@@ -391,4 +392,5 @@ export * from './messages';
 export * from './plugins';
 export * from './db';
 export { default as User } from './user';
+export { default as Trie } from './trie';
 export const LogLevels = Log;

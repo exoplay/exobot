@@ -22,7 +22,7 @@ export default class ShellAdapter extends Adapter {
     userName: 'shell',
   };
 
-  constructor (options, bot) {
+  constructor () {
     super(...arguments);
 
     this.rl = readline.createInterface({

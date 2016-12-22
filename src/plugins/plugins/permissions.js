@@ -265,9 +265,9 @@ export class Permissions extends Plugin {
       delete this.bot.users.botUsers[userId];
       this.bot.db.write();
       return `Webhook ${name} deleted.`;
-    } else {
-      return `Webhook ${name} not found.`;
     }
+
+    return `Webhook ${name} not found.`;
   }
 
   @help('/webhook regenerate <name> to regenerate a webhook\'s token');

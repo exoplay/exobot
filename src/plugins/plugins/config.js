@@ -9,7 +9,7 @@ export class Config extends Plugin {
   @respond(/^config set (\S+) (\S+) (\S+)/i);
   pluginConfigSet ([, name, key, value]) {
     this.bot.setConfiguration(name, key, value);
-    return `Plugin ${name} set ${key} = ${value}.`
+    return `Plugin ${name} set ${key} = ${value}.`;
   }
 
   @help('/config get <pluginname> <key?> retrieves plugin config info.');

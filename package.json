@@ -6,7 +6,9 @@
   "scripts": {
     "build": "exobot build",
     "watch": "exobot watch",
-    "start": "exobot run --input example/exobot.config.js --output example.js"
+    "start": "exobot run --input example/exobot.config.js --output example.js",
+    "lint": "eslint src",
+    "lint:fix": "eslint src --fix"
   },
   "repository": {
     "type": "git",
@@ -22,7 +24,10 @@
   },
   "homepage": "https://github.com/exoplay/exobot#readme",
   "devDependencies": {
-    "@exoplay/exobot-build": "^0.1.0"
+    "@exoplay/exobot-build": "^0.1.0",
+    "babel-eslint": "^7.1.1",
+    "eslint": "^3.12.2",
+    "eslint-plugin-babel": "^4.0.0"
   },
   "dependencies": {
     "cryptr": "~2.0.0",

@@ -44,7 +44,7 @@ export default class Adapter extends Configurable {
       text,
       channel,
       whisper,
-      adapter: this.name
+      adapter: this.name,
     });
 
     this.bot.emitter.emit('receive-message', message);

@@ -1,10 +1,10 @@
 const Koa = require('koa');
-const body = require('koa-better-body');
+//const body = require('koa-better-body');
 const KoaRouter = require('koa-router');
-const methodOverride = require('koa-methodoverride');
-const compress = require('koa-compress');
+//const methodOverride = require('koa-methodoverride');
+//const compress = require('koa-compress');
 
-export const server = ({ port }) => {
+export const server = () => {
   const server = new Koa();
 
   //server.use(body());
