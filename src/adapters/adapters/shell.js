@@ -12,7 +12,7 @@ const EXIT_COMMANDS = [
 ];
 
 export default class ShellAdapter extends Adapter {
-  static type = 'shell';
+  static type = 'Shell';
 
   static propTypes = {
     userName: T.string,

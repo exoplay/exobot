@@ -1,4 +1,4 @@
-import { Plugin, listen, respond, help, permissionGroup } from '../plugin';
+import { Plugin, listen, help, permissionGroup } from '../plugin';
 
 const GREETINGS = [
   'hi',
@@ -11,35 +11,11 @@ const GREETINGS = [
 
 const FAREWELLS = [
   'goodbye',
-  'farwell',
+  'farewell',
   'bye',
   'later',
-  'see ya',
   'cya',
 ];
-
-let GREETINGS_REGEX;
-const getGreetingsRegex = bot => {
-  if (GREETINGS_REGEX) { return GREETINGS_REGEX; }
-
-  GREETINGS_REGEX =
-    new RegExp(`^(?:${GREETINGS.join('|')})[\\s,:]*(?:@?${bot.options.name})?[!\\.]*$`, 'i');
-
-  return GREETINGS_REGEX;
-};
-
-let FAREWELLS_REGEX;
-const getFarewellsRegex = bot => {
-  if (FAREWELLS_REGEX) { return FAREWELLS_REGEX; }
-
-  FAREWELLS_REGEX =
-    new RegExp(`^(?:${FAREWELLS.join('|')})[\\s,:]*(?:@?${bot.options.name})?[!\\.]*$`, 'i');
-
-  return FAREWELLS_REGEX;
-};
-
-const shouldGreet = (m, bot) => getGreetingsRegex(bot).exec(m.text);
-const shouldFarewell = (m, bot) => getFarewellsRegex(bot).exec(m.text);
 
 export class Greetings extends Plugin {
   static type = 'greeting';
@@ -47,18 +23,20 @@ export class Greetings extends Plugin {
 
   @help('Greets you back when you greet the channel.');
   @permissionGroup('greetings');
-  @listen(shouldGreet);
-  @respond(shouldGreet);
-  greeting (_, message) {
+  @listen(':greeting*');
+  greeting (message) {
+    if (!GREETINGS.includes(message.params.greeting.toLowerCase())) { return; }
+
     const randomGreeting = GREETINGS[parseInt(Math.random() * GREETINGS.length)];
     return `${randomGreeting}, ${message.user.name}!`;
   }
 
   @help('Says goodbye when you do.');
   @permissionGroup('greetings');
-  @listen(shouldFarewell);
-  @respond(shouldFarewell);
-  farewell (_, message) {
+  @listen(':farewell*');
+  farewell (message) {
+    if (!FAREWELLS.includes(message.params.farewell.toLowerCase())) { return; }
+
     const randomFarewell = FAREWELLS[parseInt(Math.random() * FAREWELLS.length)];
     return `${randomFarewell}, ${message.user.name}!`;
   }

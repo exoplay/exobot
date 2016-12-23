@@ -6,7 +6,7 @@ export class Help extends Plugin {
 
   @help('/help explains commands.');
   @permissionGroup('help');
-  @respond(/^help$/i);
+  @respond('help');
   pluginHelp () {
     return Object.keys(this.bot.plugins).map(p => this.bot.plugins[p])
                     .filter(p => p.constructor.help && p.constructor.help.length > 0)
@@ -16,8 +16,9 @@ export class Help extends Plugin {
 
   @help('/help <search> finds information about a specific command.');
   @permissionGroup('help');
-  @respond(/^help (\w+)$/i);
-  pluginHelpSearch ([, search]) {
+  @respond('help :search');
+  pluginHelpSearch (message) {
+    const { search } = message.params;
     return Object.keys(this.bot.plugins).map(p => this.bot.plugins[p])
                     .filter(p => p.constructor.help && p.constructor.help.length > 0)
                     .map(p => {

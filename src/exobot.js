@@ -8,6 +8,7 @@ import { merge } from 'lodash';
 
 sapp.Promise = Promise;
 
+import Trie from './trie';
 import { Permissions } from './plugins/plugins';
 import { TextMessage } from './messages';
 
@@ -25,6 +26,39 @@ const PLUGIN = 'plugins';
 const ADAPTER = 'adapters';
 
 const CLASS_NAME_FOR_CONFIG = 'exobot';
+
+export class Command {
+  constructor(command, name, plugin, bot, respond=false) {
+    this._name = name;
+    this.bot = bot;
+
+    this.command = respond ? `${bot.options.name} ${command}` : command;
+    this.command = this.command.toLowerCase(); // make the matcher case-insensitive
+
+    this.plugin = plugin;
+
+    this.run = this.run.bind(this);
+  }
+
+  async run (message, params) {
+    if (this.bot.checkPermissions(message.user.id, this.plugin.permissionGroup(this._name))) {
+      const m = new TextMessage({
+        ...message,
+        params,
+      });
+
+      const text = await this.plugin[this._name](m);
+
+      const responseMessage = new TextMessage({
+        ...message,
+        params,
+        text,
+      });
+
+      return responseMessage;
+    }
+  }
+}
 
 export class Exobot extends Configurable {
   static type = CLASS_NAME_FOR_CONFIG;
@@ -90,6 +124,7 @@ export class Exobot extends Configurable {
     }
 
     try {
+      this.initRouter();
       this.initDBConfiguration();
       this.initUsers();
       this.initPlugins(this.options.plugins);
@@ -106,6 +141,10 @@ export class Exobot extends Configurable {
     Object.keys(this.plugins).forEach(k => {
       this.adapters[k].shutdown();
     });
+  }
+
+  initRouter () {
+    this.commandRouter = new Trie();
   }
 
   initDBConfiguration () {
@@ -267,18 +306,10 @@ export class Exobot extends Configurable {
                    .find(id => this.users.botUsers[id].name.toLowerCase() === name.toLowerCase());
   }
 
-  checkPermissionsByToken (token, commandPermissionGroup) {
-    if (!token) { return; }
-
-    const userId = Object.keys(this.users.botUsers)
-                           .find(id => this.users.botUsers[id].token === token);
-
-    return this.checkPermissions(userId, commandPermissionGroup);
-  }
-
   addPlugin (name, PluginClass, opts) {
     const options = {
       ...opts,
+      name: name,
       ...this.getConfiguration(name),
     };
 
@@ -342,6 +373,24 @@ export class Exobot extends Configurable {
     }
   }
 
+  registerListeners (listeners=[], plugin) {
+    listeners.forEach(([command, name]) => {
+      const c = new Command(command, name, plugin, this);
+      this.commandRouter.define(c.command, c.run);
+
+      // also register a responder to make whispers work
+      const r = new Command(command, name, plugin, this, true);
+      this.commandRouter.define(r.command, r.run);
+    });
+  }
+
+  registerResponders (responders=[], plugin) {
+    responders.forEach(([command, name]) => {
+      const c = new Command(command, name, plugin, this, true);
+      this.commandRouter.define(c.command, c.run);
+    });
+  }
+
   send = message => {
     if (!message.text) { return; }
     const adapter = this.getAdapterByMessage(message);
@@ -352,6 +401,7 @@ export class Exobot extends Configurable {
     }
 
     adapter.send(message);
+    return message;
   }
 
   getByName = (name, list) => {
@@ -370,17 +420,31 @@ export class Exobot extends Configurable {
     return this.getByName(message.adapter, this.adapters);
   }
 
+  async receiveMessage (message) {
+    const node = this.commandRouter.match(message.text.toLowerCase());
+    console.log(node, message.text.toLowerCase());
+
+    if (node && node.node) {
+      const res = await node.node.fn(message, node.params);
+
+      if (res) {
+        return this.send(res);
+      }
+    }
+  }
+
   parseMessage = message => {
     const { text } = message;
-
-    if (message.whisper) {
-      return new TextMessage({ ...message, respond: true });
-    }
-
     const exec = this.botNameRegex.exec(text);
 
-    if (exec) {
-      return new TextMessage({ ...message, text: exec[1], respond: true });
+    // prepend the bot name to the command if it's a whisper and it isn't
+    // included
+    if (message.whisper) {
+      if (exec) {
+        return new TextMessage({ ...message, text: exec[1] });
+      }
+
+      return new TextMessage({ ...message, text: `${this.options.name} text` });
     }
 
     return new TextMessage(message);

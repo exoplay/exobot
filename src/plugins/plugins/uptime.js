@@ -13,7 +13,7 @@ export class Uptime extends Plugin {
 
   @help('/uptime shows time since last restart.');
   @permissionGroup('uptime');
-  @respond(/^uptime/i);
+  @respond('uptime');
   pluginUptime () {
     const now = new Date();
     let diff = now - start;

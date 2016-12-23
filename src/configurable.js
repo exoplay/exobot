@@ -43,6 +43,7 @@ export class Configurable {
               return c;
             }, {})
         ),
+      name,
       ...options,
     };
   }
@@ -79,7 +80,7 @@ export class Configurable {
   }
 
   static validateConfig (name, config={}, log) {
-    return Object.keys(this.propTypes).reduce((validatedConfig, k) => {
+    const c = Object.keys(this.propTypes).reduce((validatedConfig, k) => {
       const err = this.propTypes[k](config, k, `${name} config`, 'prop');
 
       if (err) {
@@ -90,6 +91,10 @@ export class Configurable {
       validatedConfig[k] = config[k];
       return validatedConfig;
     }, {});
+
+    c.name = name;
+    return c;
+
   }
 
   static parseBoolean (value) {
@@ -115,16 +120,20 @@ export class Configurable {
     return this.constructor.type;
   }
 
+  options = {};
+
   constructor (options, bot, log=bot.log) {
     this.bot = bot;
     this.log = log;
 
-    this.options = this.constructor.parseConfig(options.name, options, log);
     this.originalOptions = { ...this.options };
+    this.options = this.constructor.parseConfig(options.name, options, log);
 
+    /*
     if (this.constructor.propTypes && Object.keys(this.constructor.propTypes).length) {
       this.options = this.constructor.validateConfig(this.name, this.options, log);
     }
+    */
   }
 
   updateConfiguration (options={}, passThroughErrors = false, overwrite = false) {
