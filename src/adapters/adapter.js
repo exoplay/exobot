@@ -1,5 +1,5 @@
 import { Configurable } from '../configurable';
-import {AdapterOperationTypes as AO} from '../exobot';
+import { AdapterOperationTypes as AO } from '../exobot';
 import PresenceMessage from '../messages/presence';
 import User from '../user';
 
@@ -31,7 +31,7 @@ export default class Adapter extends Configurable {
     this.bot = bot;
     this.initUsers();
     this.prompts = {};
-    this.bot.emitter.on(AO.PROMPT_USER, this.promptUser, this);
+    this.bot.emitter.on(AO.PROMPT_USER, this.promptUser);
     this.status = Adapter.STATUS.CONNECTING;
   }
 
@@ -57,14 +57,16 @@ export default class Adapter extends Configurable {
       this.bot.log.warning('Message received with undefined text.');
       return;
     }
+
     if (this.prompts[user.id]) {
       this.prompts[user.id].forEach((val, index) => {
-        if (val.cb(val.data,...arguments)) {
+        if (val.cb(val.data, {user, text, channel})) {
           delete this.prompts[user.id][index];
           return;
         }
       });
     }
+
     this.receive({ user, text, channel, whisper: true });
   }
 
@@ -109,7 +111,7 @@ export default class Adapter extends Configurable {
   }
 
   getAdapterUserIdById(userId) {
-    const botUser = this.bot.users.botUsers[userId];
+    const botUser = this.bot.getUser(userId);
     if (botUser) {
       if (botUser.adapters && botUser.adapters[this.name]) {
         return botUser.adapters[this.name].userId;
@@ -128,14 +130,7 @@ export default class Adapter extends Configurable {
   }
 
   async initUsers() {
-    this.adapterUsers = this.bot.users[this.name];
-    if (this.adapterUsers) {
-      return;
-    }
-
-    this.bot.users[this.name] = {};
-    this.adapterUsers = this.bot.users[this.name];
-    this.bot.db.write();
+    this.adapterUsers = this.bot.getAdapterUserDb(this.name);
   }
 
   getRoles() {
@@ -161,13 +156,14 @@ export default class Adapter extends Configurable {
         }
 
         if (adapterUsername) {
-          this.bot.users.botUsers[this.adapterUsers[adapterUserId].botId].name = adapterUsername;
+          this.bot.setUserData(this.adapterUsers[adapterUserId].botId, 'name', adapterUserName);
         }
 
-        return this.bot.users.botUsers[this.adapterUsers[adapterUserId].botId];
+        return this.bot.getUserData(this.adapterUsers[adapterUserId], 'botId');
       }
 
       const user = new User(adapterUsername);
+
       user.adapters = { [this.name]: { userId: adapterUserId } };
 
       this.adapterUsers[adapterUserId] = {
@@ -187,12 +183,14 @@ export default class Adapter extends Configurable {
     );
   }
 
-  promptUser = (data, cb) => {
-    this.bot.emitter.emit(AO.WHISPER_USER,this.name, data);
-    if (this.prompts[data.userId]) {
-      this.prompts[data.userId].push({data, cb});
-    } else {
-      this.prompts[data.userId] = [{data, cb}];
+  promptUser = (adapterName, data, cb) => {
+    if (this.name === adapterName) {
+      this.bot.emitter.emit(AO.WHISPER_USER, this.name, data);
+      if (this.prompts[data.userId]) {
+        this.prompts[data.userId].push({ data, cb });
+      } else {
+        this.prompts[data.userId] = [{ data, cb }];
+      }
     }
   }
 

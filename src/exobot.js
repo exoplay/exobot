@@ -3,8 +3,8 @@ import Log from 'log';
 import superagent from 'superagent';
 import sapp from 'superagent-promise-plugin';
 import { intersection } from 'lodash/array';
-import { get } from 'lodash/object';
-import { merge } from 'lodash';
+import { get, set } from 'lodash/object';
+import { merge, cloneDeep} from 'lodash';
 
 import { Permissions } from './plugins/plugins';
 import { TextMessage } from './messages';
@@ -174,8 +174,45 @@ export class Exobot extends Configurable {
     this.users = this.db.get(USERS_DB).value();
   }
 
-  mergeUsers = (destUser, srcUser) => {
-    if (destUser && srcUser) {
+  getAdapterUserDb = (adapterName) => {
+    if (this.bot.users[adapterName]) {
+      return this.bot.users[adapterName];
+    }
+
+    this.bot.users[adapterName] = {};
+    this.bot.db.write();
+    return this.bot.users[adapterName];
+  }
+
+  addUser = (user) => {
+    if (user && !this.bot.users.botUsers[user.id]) {
+      this.bot.users.botUsers[user.id] = user;
+      this.bot.db.write();
+    }
+  }
+
+  getUser = (userId) => {
+    if (this.bot.users[userId]) {
+      return cloneDeep(this.bot.users.botUsers[userId]);
+    }
+  }
+
+  getUserData = (userId, query) => {
+    if (this.bot.users.botUsers[userId]) {
+      return get(this.bot.users.botUsers[userId], query);
+    }
+  }
+
+  setUserData = (userId, path, value) => {
+    if (this.bot.users.botUsers[userId]) {
+      set(this.bot.users.botUsers[userId], path, value);
+    }
+  }
+
+  mergeUsers = (destUserId, srcUserId) => {
+    if (destUserId && srcUserId) {
+      const destUser = this.bot.users.botUsers[destUserId];
+      const srcUser = this.bot.users.botUsers[srcUserId];
       merge(destUser.roles, srcUser.roles);
 
       Object.keys(srcUser.adapters).forEach((adapter) => {
