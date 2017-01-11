@@ -121,6 +121,10 @@ export class Exobot extends Configurable {
 
         if (config.import) {
           plugin = get(requiredPlugin, config.import);
+        } else if (requiredPlugin.default) {
+          plugin = requiredPlugin.default;
+        } else {
+          plugin = requiredPlugin;
         }
       }
 
