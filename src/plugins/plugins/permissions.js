@@ -1,5 +1,5 @@
-import { AdapterOperationTypes as AO } from '../../exobot';
 import { v4 as uuid } from 'node-uuid';
+import { AdapterOperationTypes as AO } from '../../exobot';
 import { Plugin, respond, help, permissionGroup } from '../plugin';
 import { PropTypes as T } from '../../configurable';
 import User from '../../user';
@@ -12,7 +12,7 @@ export class Permissions extends Plugin {
 
   static propTypes = {
     adminPassword: T.string.isRequired,
-    protectAdminPassword: T.boolean,
+    protectAdminPassword: T.bool,
   };
 
   defaultProps = {

@@ -62,7 +62,6 @@ export default class Adapter extends Configurable {
       this.prompts[user.id].forEach((val, index) => {
         if (val.cb(val.data, {user, text, channel})) {
           delete this.prompts[user.id][index];
-          return;
         }
       });
     }
@@ -131,6 +130,7 @@ export default class Adapter extends Configurable {
 
   async initUsers() {
     this.adapterUsers = this.bot.getAdapterUserDb(this.name);
+    console.log(this.adapterUsers);
   }
 
   getRoles() {
@@ -156,10 +156,10 @@ export default class Adapter extends Configurable {
         }
 
         if (adapterUsername) {
-          this.bot.setUserData(this.adapterUsers[adapterUserId].botId, 'name', adapterUserName);
+          this.bot.setUserData(this.adapterUsers[adapterUserId].botId, 'name', adapterUsername);
         }
 
-        return this.bot.getUserData(this.adapterUsers[adapterUserId], 'botId');
+        return this.bot.getUser(this.adapterUsers[adapterUserId].botId);
       }
 
       const user = new User(adapterUsername);

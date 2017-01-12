@@ -36,6 +36,7 @@ export default class ShellAdapter extends Adapter {
 
   async prompt() {
     this.user = await this.getUser(this.options.userName, this.options.userName);
+    console.log(this.user);
     this.rl.question('Chat: ', (answer) => {
       if (EXIT_COMMANDS.includes(answer)) {
         this.bot.db.write().then(() => process.exit());
@@ -45,6 +46,7 @@ export default class ShellAdapter extends Adapter {
         text: answer,
         channel: SHELL,
         user: this.user,
+        whisper: true,
       });
 
       this.prompt();

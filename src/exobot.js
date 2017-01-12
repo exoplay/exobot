@@ -175,44 +175,44 @@ export class Exobot extends Configurable {
   }
 
   getAdapterUserDb = (adapterName) => {
-    if (this.bot.users[adapterName]) {
-      return this.bot.users[adapterName];
+    if (this.users[adapterName]) {
+      return this.users[adapterName];
     }
 
-    this.bot.users[adapterName] = {};
-    this.bot.db.write();
-    return this.bot.users[adapterName];
+    this.users[adapterName] = {};
+    this.db.write();
+    return this.users[adapterName];
   }
 
   addUser = (user) => {
-    if (user && !this.bot.users.botUsers[user.id]) {
-      this.bot.users.botUsers[user.id] = user;
-      this.bot.db.write();
+    if (user && !this.users.botUsers[user.id]) {
+      this.users.botUsers[user.id] = user;
+      this.db.write();
     }
   }
 
   getUser = (userId) => {
-    if (this.bot.users[userId]) {
-      return cloneDeep(this.bot.users.botUsers[userId]);
+    if (this.users.botUsers[userId]) {
+      return cloneDeep(this.users.botUsers[userId]);
     }
   }
 
   getUserData = (userId, query) => {
-    if (this.bot.users.botUsers[userId]) {
-      return get(this.bot.users.botUsers[userId], query);
+    if (this.users.botUsers[userId]) {
+      return get(this.users.botUsers[userId], query);
     }
   }
 
   setUserData = (userId, path, value) => {
-    if (this.bot.users.botUsers[userId]) {
-      set(this.bot.users.botUsers[userId], path, value);
+    if (this.users.botUsers[userId]) {
+      set(this.users.botUsers[userId], path, value);
     }
   }
 
   mergeUsers = (destUserId, srcUserId) => {
     if (destUserId && srcUserId) {
-      const destUser = this.bot.users.botUsers[destUserId];
-      const srcUser = this.bot.users.botUsers[srcUserId];
+      const destUser = this.users.botUsers[destUserId];
+      const srcUser = this.users.botUsers[srcUserId];
       merge(destUser.roles, srcUser.roles);
 
       Object.keys(srcUser.adapters).forEach((adapter) => {
