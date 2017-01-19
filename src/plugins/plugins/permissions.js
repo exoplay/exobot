@@ -28,7 +28,7 @@ export class Permissions extends Plugin {
   setAdminPassword = (data, message) => {
     if (data.type === 'PasswordReset') {
       this.options.adminPassword = message.text;
-      this.bot.emitter.emit(AO.WHISPER_USER, {
+      this.bot.emitter.emit(AO.WHISPER_USER, message.adapter, {
         userId: message.user.id,
         messageText: 'New admin password set',
       });
@@ -41,6 +41,7 @@ export class Permissions extends Plugin {
   @permissionGroup('public');
   @respond(/^permissions authorize admin (.+)$/i);
   admin([, adminPassword], message) {
+
     // Validate the password - if there is one.
     if (this.options.adminPassword && adminPassword === this.options.adminPassword) {
       const id = this.constructor.nameToId(message.user.id);

@@ -27,7 +27,6 @@ export class Configurable {
 
   static parseConfig(name = this.type, options = {}) {
     if (!this.propTypes) { return options; }
-
     const optionKeys = Object.keys(options);
 
     /* eslint no-param-reassign: 0 */
@@ -59,11 +58,11 @@ export class Configurable {
     switch (propType) {
       case T.bool:
       case T.bool.isRequired:
-        val = this.parseBoolean(val);
+        return this.parseBoolean(val);
         break;
       case T.number:
       case T.number.isRequired:
-        val = parseInt(val, 10);
+        return parseInt(val, 10);
         break;
       case T.string:
       case T.string.isRequired:

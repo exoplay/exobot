@@ -57,7 +57,6 @@ export default class Adapter extends Configurable {
       this.bot.log.warning('Message received with undefined text.');
       return;
     }
-
     if (this.prompts[user.id]) {
       this.prompts[user.id].forEach((val, index) => {
         if (val.cb(val.data, {user, text, channel})) {
@@ -130,7 +129,6 @@ export default class Adapter extends Configurable {
 
   async initUsers() {
     this.adapterUsers = this.bot.getAdapterUserDb(this.name);
-    console.log(this.adapterUsers);
   }
 
   getRoles() {
