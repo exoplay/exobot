@@ -4,7 +4,7 @@ import superagent from 'superagent';
 import sapp from 'superagent-promise-plugin';
 import { intersection } from 'lodash/array';
 import { get, set } from 'lodash/object';
-import { merge, cloneDeep} from 'lodash';
+import { merge, cloneDeep } from 'lodash';
 
 import { Permissions } from './plugins/plugins';
 import { TextMessage } from './messages';

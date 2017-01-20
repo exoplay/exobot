@@ -1,5 +1,5 @@
 import readline from 'readline';
-import { AdapterOperationTypes as AT} from '../../exobot';
+import { AdapterOperationTypes as AT } from '../../exobot';
 import { PropTypes as T } from '../../configurable';
 import Adapter from '../adapter';
 
@@ -49,8 +49,7 @@ export default class ShellAdapter extends Adapter {
           user: this.user,
           whisper: true,
         });
-      }
-      else {
+      } else {
         super.receive({
           text: answer,
           channel: SHELL,
@@ -65,9 +64,11 @@ export default class ShellAdapter extends Adapter {
   }
 
   send(message) {
-    if(message.whisper) {
+    if (message.whisper) {
+      /* eslint class-methods-use-this: 0, no-console: 0 */
       console.log(`W: ${message.text}`);
     } else {
+      /* eslint class-methods-use-this: 0, no-console: 0 */
       console.log(message.text);
     }
   }
@@ -86,7 +87,7 @@ export default class ShellAdapter extends Adapter {
       if (adapterUserId) {
         this.send({
           text: options.messageText,
-          whisper: true
+          whisper: true,
         });
       }
     }

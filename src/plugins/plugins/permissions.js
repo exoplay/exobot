@@ -41,7 +41,6 @@ export class Permissions extends Plugin {
   @permissionGroup('public');
   @respond(/^permissions authorize admin (.+)$/i);
   admin([, adminPassword], message) {
-
     // Validate the password - if there is one.
     if (this.options.adminPassword && adminPassword === this.options.adminPassword) {
       const id = this.constructor.nameToId(message.user.id);

@@ -59,7 +59,7 @@ export default class Adapter extends Configurable {
     }
     if (this.prompts[user.id]) {
       this.prompts[user.id].forEach((val, index) => {
-        if (val.cb(val.data, {user, text, channel})) {
+        if (val.cb(val.data, { user, text, channel })) {
           delete this.prompts[user.id][index];
         }
       });

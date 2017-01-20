@@ -59,11 +59,9 @@ export class Configurable {
       case T.bool:
       case T.bool.isRequired:
         return this.parseBoolean(val);
-        break;
       case T.number:
       case T.number.isRequired:
         return parseInt(val, 10);
-        break;
       case T.string:
       case T.string.isRequired:
         return val;
