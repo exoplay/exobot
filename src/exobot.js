@@ -3,19 +3,28 @@ import Log from 'log';
 import superagent from 'superagent';
 import sapp from 'superagent-promise-plugin';
 import { intersection } from 'lodash/array';
-import { get } from 'lodash/object';
-import { merge } from 'lodash';
+import { get, set } from 'lodash/object';
+import { merge, cloneDeep } from 'lodash';
 
 import { Permissions } from './plugins/plugins';
 import { TextMessage } from './messages';
-
 import { Configurable, PropTypes as T } from './configurable';
+
 
 import { Adapter } from './adapters';
 import { Plugin } from './plugins';
 import { DB } from './db';
 
 sapp.Promise = Promise;
+
+export const PropTypes = T;
+export const AdapterOperationTypes = {
+  DISCIPLINE_USER_WARNING: 'AO_discipline_user_warning',
+  DISCIPLINE_USER_TEMPORARY: 'AO_discipline_user_temporary',
+  DISCIPLINE_USER_PERMANENT: 'AO_discipline_user_permanent',
+  WHISPER_USER: 'AO_whisper_user',
+  PROMPT_USER: 'AO_prompt_user',
+};
 
 const http = sapp.patch(superagent);
 const USERS_DB = 'exobot-users';
@@ -165,8 +174,45 @@ export class Exobot extends Configurable {
     this.users = this.db.get(USERS_DB).value();
   }
 
-  mergeUsers = (destUser, srcUser) => {
-    if (destUser && srcUser) {
+  getAdapterUserDb = (adapterName) => {
+    if (this.users[adapterName]) {
+      return this.users[adapterName];
+    }
+
+    this.users[adapterName] = {};
+    this.db.write();
+    return this.users[adapterName];
+  }
+
+  addUser = (user) => {
+    if (user && !this.users.botUsers[user.id]) {
+      this.users.botUsers[user.id] = user;
+      this.db.write();
+    }
+  }
+
+  getUser = (userId) => {
+    if (this.users.botUsers[userId]) {
+      return cloneDeep(this.users.botUsers[userId]);
+    }
+  }
+
+  getUserData = (userId, query) => {
+    if (this.users.botUsers[userId]) {
+      return get(this.users.botUsers[userId], query);
+    }
+  }
+
+  setUserData = (userId, path, value) => {
+    if (this.users.botUsers[userId]) {
+      set(this.users.botUsers[userId], path, value);
+    }
+  }
+
+  mergeUsers = (destUserId, srcUserId) => {
+    if (destUserId && srcUserId) {
+      const destUser = this.users.botUsers[destUserId];
+      const srcUser = this.users.botUsers[srcUserId];
       merge(destUser.roles, srcUser.roles);
 
       Object.keys(srcUser.adapters).forEach((adapter) => {

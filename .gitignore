@@ -6,5 +6,5 @@ start.sh
 build/
 example/
 data
-exobot.*
 example.js
+/exobot.*

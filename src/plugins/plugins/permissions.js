@@ -1,5 +1,5 @@
 import { v4 as uuid } from 'node-uuid';
-
+import { AdapterOperationTypes as AO } from '../../exobot';
 import { Plugin, respond, help, permissionGroup } from '../plugin';
 import { PropTypes as T } from '../../configurable';
 import User from '../../user';
@@ -12,12 +12,29 @@ export class Permissions extends Plugin {
 
   static propTypes = {
     adminPassword: T.string.isRequired,
+    protectAdminPassword: T.bool,
   };
+
+  defaultProps = {
+    protectAdminPassword: true,
+  }
 
   static nameToId = (name) => {
     if (name) {
       return name.replace(/[^\w-]/g, '').toLowerCase();
     }
+  }
+
+  setAdminPassword = (data, message) => {
+    if (data.type === 'PasswordReset') {
+      this.options.adminPassword = message.text;
+      this.bot.emitter.emit(AO.WHISPER_USER, message.adapter, {
+        userId: message.user.id,
+        messageText: 'New admin password set',
+      });
+      return true;
+    }
+    return false;
   }
 
   @help('/permissions authorize admin <password> to authorize yourself as an admin');
@@ -27,6 +44,16 @@ export class Permissions extends Plugin {
     // Validate the password - if there is one.
     if (this.options.adminPassword && adminPassword === this.options.adminPassword) {
       const id = this.constructor.nameToId(message.user.id);
+      if (!message.whisper && this.options.protectAdminPassword) {
+        this.options.adminPassword = uuid();
+        this.bot.emitter.emit(AO.PROMPT_USER, message.adapter, {
+          type: 'PasswordReset',
+          userId: message.user.id,
+          messageText: 'Admin password invalidated due to public channel use of login command. ' +
+          'Please respond by typing a new admin password.',
+        }, this.setAdminPassword);
+      }
+
       this.bot.addRole(id, 'admin');
       return 'User authorized as admin.';
     }
@@ -161,11 +188,11 @@ export class Permissions extends Plugin {
   @respond(/^login\s*(\S+)?\s*(\S+)?$/i);
   multipleAdapterLogin([, userId, token], message) {
     if (userId && token) {
-      const user = this.bot.users.botUsers[userId];
+      const user = this.bot.getUser(userId);
       if (user && user.id !== message.user.id) {
         if (user.token === token) {
-          user.token = undefined;
-          return this.bot.mergeUsers(user, message.user);
+          this.bot.setUserData(user.id, 'token', undefined);
+          return this.bot.mergeUsers(user.id, message.user.id);
         }
       }
 
@@ -173,7 +200,7 @@ export class Permissions extends Plugin {
     }
 
     token = uuid();
-    message.user.token = token;
+    this.bot.setUserData(message.user.id, 'token', token);
     return 'Please whisper this to the bot on the other adapter \n' +
             `login ${message.user.id} ${token}`;
   }

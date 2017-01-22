@@ -1,5 +1,5 @@
 import readline from 'readline';
-
+import { AdapterOperationTypes as AT } from '../../exobot';
 import { PropTypes as T } from '../../configurable';
 import Adapter from '../adapter';
 
@@ -30,6 +30,7 @@ export default class ShellAdapter extends Adapter {
       output: process.stdout,
     });
 
+    this.bot.emitter.on(AT.WHISPER_USER, this.whisperUser, this);
     this.prompt();
     this.status = Adapter.STATUS.CONNECTED;
   }
@@ -40,15 +41,36 @@ export default class ShellAdapter extends Adapter {
       if (EXIT_COMMANDS.includes(answer)) {
         this.bot.db.write().then(() => process.exit());
       }
+      const res = /^\/w (.+)$/i.exec(answer);
+      if (res) {
+        super.receiveWhisper({
+          text: res[1],
+          channel: SHELL,
+          user: this.user,
+          whisper: true,
+        });
+      } else {
+        super.receive({
+          text: answer,
+          channel: SHELL,
+          user: this.user,
+          whisper: false,
+        });
+      }
 
-      super.receive({
-        text: answer,
-        channel: SHELL,
-        user: this.user,
-      });
 
       this.prompt();
     });
+  }
+
+  send(message) {
+    if (message.whisper) {
+      /* eslint class-methods-use-this: 0, no-console: 0 */
+      console.log(`W: ${message.text}`);
+    } else {
+      /* eslint class-methods-use-this: 0, no-console: 0 */
+      console.log(message.text);
+    }
   }
 
   getUserIdByUserName() {
@@ -57,5 +79,17 @@ export default class ShellAdapter extends Adapter {
 
   getRoles() {
     return false;
+  }
+
+  whisperUser(adapterName, options) {
+    if (!adapterName || adapterName === this.name) {
+      const adapterUserId = this.getAdapterUserIdById(options.userId);
+      if (adapterUserId) {
+        this.send({
+          text: options.messageText,
+          whisper: true,
+        });
+      }
+    }
   }
 }
