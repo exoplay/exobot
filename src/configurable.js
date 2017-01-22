@@ -49,9 +49,9 @@ export class Configurable {
   }
 
   static processEnv(name, key, propType) {
-    let val = process.env[this.envify(name, key)];
+    const val = process.env[this.envify(name, key)];
 
-    if (!val) { return val; }
+    if (!val) { return; }
     if (!propType) { return val; }
 
     // Convert booleans and numbers, possibly from env vars, to the proper type
@@ -70,7 +70,7 @@ export class Configurable {
         // We'll try to parseit out as JSON, or else return whatever the value
         // is.
         try {
-          val = JSON.parse(val);
+          return JSON.parse(val);
         } catch (e) {
           return val;
         }
