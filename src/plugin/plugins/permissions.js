@@ -6,7 +6,7 @@ import User from '../../user';
 
 /* eslint no-param-reassign: 0 */
 
-export class Permissions extends Plugin {
+export default class Permissions extends Plugin {
   static type = 'permissions';
   static defaultDatabase = { permissions: {} };
 

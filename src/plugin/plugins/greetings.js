@@ -41,7 +41,7 @@ const getFarewellsRegex = (bot) => {
 const shouldGreet = (m, bot) => getGreetingsRegex(bot).exec(m.text);
 const shouldFarewell = (m, bot) => getFarewellsRegex(bot).exec(m.text);
 
-export class Greetings extends Plugin {
+export default class Greetings extends Plugin {
   static type = 'greeting';
   static propTypes = {};
 

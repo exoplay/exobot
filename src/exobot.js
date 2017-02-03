@@ -6,16 +6,17 @@ import { intersection } from 'lodash/array';
 import { get, set } from 'lodash/object';
 import { merge, cloneDeep } from 'lodash';
 
-import { Permissions } from './plugins/plugins';
-import { TextMessage } from './messages';
+import Permissions from './plugin/plugins/permissions';
+import TextMessage from './message/text';
 import { Configurable, PropTypes as T } from './configurable';
 
-
-import { Adapter } from './adapters';
-import { Plugin } from './plugins';
-import { DB } from './db';
+import Adapter from './adapter/adapter';
+import { Plugin } from './plugin/plugin';
+import { DB } from './db/db';
 
 sapp.Promise = Promise;
+
+export const LogLevels = Log;
 
 export const PropTypes = T;
 export const AdapterOperationTypes = {
@@ -420,10 +421,3 @@ export class Exobot extends Configurable {
     return new TextMessage(message);
   }
 }
-
-export * from './adapters';
-export * from './messages';
-export * from './plugins';
-export * from './db';
-export { default as User } from './user';
-export const LogLevels = Log;

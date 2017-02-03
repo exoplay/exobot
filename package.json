@@ -4,8 +4,8 @@
   "description": "a chatbox",
   "main": "exobot.js",
   "scripts": {
-    "build": "exobot build",
-    "watch": "exobot watch",
+    "build": "exobot build -i src/index.js -o exobot.js",
+    "watch": "exobot watch -i src/index.js -o exobot.js",
     "start": "exobot run --input example/exobot.config.js --output example.js",
     "lint": "eslint src",
     "lint:fix": "eslint src --fix"

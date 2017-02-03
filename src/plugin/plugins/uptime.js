@@ -5,7 +5,7 @@ const MINUTES = SECONDS * 60;
 const HOURS = MINUTES * 60;
 const DAYS = HOURS * 24;
 
-export class Uptime extends Plugin {
+export default class Uptime extends Plugin {
   static type = 'uptime';
   static propTypes = {};
 

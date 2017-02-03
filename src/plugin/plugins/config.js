@@ -1,6 +1,6 @@
 import { Plugin, respond, help, permissionGroup } from '../plugin';
 
-export class Config extends Plugin {
+export default class Config extends Plugin {
   static type = 'config';
   static propTypes = {};
 

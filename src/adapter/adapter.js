@@ -1,7 +1,7 @@
 import { Configurable } from '../configurable';
-import { AdapterOperationTypes as AO } from '../exobot';
-import PresenceMessage from '../messages/presence';
+import PresenceMessage from '../message/presence';
 import User from '../user';
+import { AdapterOperationTypes as AO } from '../exobot';
 
 export default class Adapter extends Configurable {
   static STATUS = {

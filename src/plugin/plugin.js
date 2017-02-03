@@ -1,5 +1,5 @@
 import { Configurable } from '../configurable';
-import { TextMessage } from '../messages';
+import TextMessage from '../message/text';
 
 export class Plugin extends Configurable {
   static propTypes = null;
