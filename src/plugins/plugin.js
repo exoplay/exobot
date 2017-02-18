@@ -96,12 +96,12 @@ export class Plugin extends Configurable {
   }
 
   database() {
-    if (this.defaultDatabase) {
-      Object.keys(this.defaultDatabase).forEach((name) => {
+    if (this.constructor.defaultDatabase) {
+      Object.keys(this.constructor.defaultDatabase).forEach((name) => {
         const val = this.bot.db.get(name).value();
 
         if (typeof val === 'undefined') {
-          this.bot.db.set(name, this.defaultDatabase[name]).value();
+          this.bot.db.set(name, this.constructor.defaultDatabase[name]).value();
         }
       });
     }
