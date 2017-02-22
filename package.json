@@ -1,6 +1,6 @@
 {
   "name": "@exoplay/exobot",
-  "version": "4.1.4",
+  "version": "4.2.0",
   "description": "a chatbox",
   "main": "exobot.js",
   "scripts": {
