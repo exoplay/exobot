@@ -101,14 +101,12 @@ export class Exobot extends Configurable {
     }
   }
 
-  shutdown() {
-    Object.keys(this.adapters).forEach((k) => {
-      this.adapters[k].shutdown();
-    });
-
-    Object.keys(this.plugins).forEach((k) => {
-      this.plugins[k].shutdown();
-    });
+  async shutdown() {
+    await Promise.all([
+      ...Object.keys(this.adapters).map(k => this.adapters[k].shutdown()),
+      ...Object.keys(this.plugins).map(k => this.plugins[k].shutdown()),
+      this.db.write(),
+    ]);
   }
 
   initDBConfiguration() {

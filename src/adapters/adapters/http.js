@@ -10,13 +10,13 @@ import { PropTypes as T } from '../../configurable';
 import Adapter from '../adapter';
 
 export const buildServer = () => {
-  const server = new Koa();
+  const app = new Koa();
 
-  server.use(KoaBody());
-  server.use(methodOverride());
-  server.use(compress());
+  app.use(KoaBody());
+  app.use(methodOverride());
+  app.use(compress());
 
-  return server;
+  return app;
 };
 
 export const router = opts => new KoaRouter(opts);
@@ -37,12 +37,16 @@ export default class HttpAdapter extends Adapter {
   constructor() {
     super(...arguments);
 
-    this.server = buildServer();
+    this.app = buildServer();
     this.options.router.all('*', this.receiveHTTPRequest.bind(this));
-    this.server.use(this.options.router.routes());
-    this.server.listen(this.options.port);
+    this.app.use(this.options.router.routes());
+    this.server = this.app.listen(this.options.port);
 
     this.status = Adapter.STATUS.CONNECTED;
+  }
+
+  shutdown() {
+    this.server.close();
   }
 
   async receiveHTTPRequest(ctx) {

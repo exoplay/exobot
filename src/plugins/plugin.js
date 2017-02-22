@@ -56,6 +56,9 @@ export class Plugin extends Configurable {
     return res;
   }
 
+  /* eslint no-empty-function: 0 */
+  async shutdown() { }
+
   async process(validation, fnName, message) {
     try {
       const fn = validation.exec ? this.validateMessage(validation) : validation;

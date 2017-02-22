@@ -35,6 +35,9 @@ export default class Adapter extends Configurable {
     this.status = Adapter.STATUS.CONNECTING;
   }
 
+  /* eslint no-empty-function: 0 */
+  async shutdown() { }
+
   receive({ user, text, channel, whisper }) {
     if (!text) {
       this.bot.log.info('Message received with undefined text.');

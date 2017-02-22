@@ -35,6 +35,10 @@ export default class ShellAdapter extends Adapter {
     this.status = Adapter.STATUS.CONNECTED;
   }
 
+  shutdown() {
+    this.rl.close();
+  }
+
   async prompt() {
     this.user = await this.getUser(this.options.userName, this.options.userName);
     this.rl.question('Chat: ', (answer) => {
