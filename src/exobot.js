@@ -49,6 +49,7 @@ export class Exobot extends Configurable {
     writeFile: T.func,
     enableRouter: T.bool,
     httpPrefix: T.string,
+    dbPath: T.string,
   };
 
   static defaultProps = {
