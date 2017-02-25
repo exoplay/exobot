@@ -5,15 +5,27 @@ import underscoredb from 'underscore-db';
 
 export const deserialize = cryptr => (str) => {
   if (!str) { return {}; }
-  const decrypted = cryptr.decrypt(str);
-  const obj = JSON.parse(decrypted);
-  return obj;
+  try {
+    const keysArray = JSON.parse(str);
+    const obj = {};
+    keysArray.forEach((key) => {
+      obj[key[0]] = JSON.parse(cryptr.decrypt(key[1]));
+    });
+    return obj;
+  } catch (err) {
+    const decrypted = cryptr.decrypt(str);
+    const obj = JSON.parse(decrypted);
+    return obj;
+  }
 };
 
 export const serialize = cryptr => (obj) => {
-  const str = JSON.stringify(obj);
-  const encrypted = cryptr.encrypt(str);
-  return encrypted;
+  const keysArray = [];
+  Object.keys(obj).forEach((key) => {
+    const data = cryptr.encrypt(JSON.stringify(obj[key]));
+    keysArray.push([key, data]);
+  });
+  return JSON.stringify(keysArray);
 };
 
 export const read = readFile => (path, deserializeFn) => new Promise((resolve, reject) => {
