@@ -1,3 +1,5 @@
+/* globals __non_webpack_require__ */
+
 import Emitter from 'eventemitter3';
 import Log from 'log';
 import superagent from 'superagent';
@@ -116,23 +118,25 @@ export class Exobot extends Configurable {
   initPlugins(plugins = {}) {
     /* eslint no-param-reassign: 0 */
     const loadedPlugins = Object.keys(plugins).reduce((p, k) => {
-      const [, config] = plugins[k];
-      let [plugin] = plugins[k];
+      let [plugin, config] = plugins[k];
+
+      if (!config) {
+        this.log.warning(`Plugin "${plugin}" did not have any configuration passed in.`);
+        config = {};
+      }
 
       if (typeof plugin === 'string') {
-        // juke out webpack with evil code. use base node require so that
-        // we can autoload plugins.
-        /* eslint no-eval: 0 */ // shhhhhhhhh
-        const req = eval('require');
-        const requiredPlugin = req(plugin);
+        const requiredPlugin = __non_webpack_require__.main.require(plugin);
 
         if (config.import) {
           plugin = get(requiredPlugin, config.import);
-        } else if (requiredPlugin.default) {
-          plugin = requiredPlugin.default;
         } else {
           plugin = requiredPlugin;
         }
+      }
+
+      if (plugin.default) {
+        plugin = plugin.default;
       }
 
       p[k] = [plugin, config];
