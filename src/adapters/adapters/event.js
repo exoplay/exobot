@@ -19,43 +19,38 @@ export default class EventAdapter extends Adapter {
     super(...arguments);
     this.bot.emitter.on(AT.WHISPER_USER, this.whisperUser, this);
     this.emitter = new EventEmitter();
-    this.emitter.on('message', this.message);
+    this.emitter.on('message', this.message.bind(this));
 
     this.status = Adapter.STATUS.CONNECTED;
   }
-
 
   async message(text) {
     this.user = await this.getUser(this.options.userName, this.options.userName);
     const res = /^\/w (.+)$/i.exec(text);
 
+    const params = {
+      text,
+      channel: this.options.channel,
+      user: this.user,
+      whisper: false,
+    };
+
     if (res) {
-      super.receiveWhisper({
-        text: res[1],
-        channel: this.channel,
-        user: this.user,
-        whisper: true,
-      });
+      super.receiveWhisper({ ...params, text: res[1], whisper: true });
+      this.emitter.emit('receive', { ...params, text: res[1], whisper: true });
     } else {
-      super.receive({
-        text,
-        channel: this.channel,
-        user: this.user,
-        whisper: false,
-      });
+      super.receive(params);
+      this.emitter.emit('receive', params);
     }
-
-
-    this.prompt();
   }
 
   send(message) {
     if (message.whisper) {
       /* eslint class-methods-use-this: 0, no-console: 0 */
-      this.emitter.emit('whisper', message.text);
+      this.emitter.emit('whisper', { ...message, user: { name: this.bot.name } });
     } else {
       /* eslint class-methods-use-this: 0, no-console: 0 */
-      this.emitter.emit('send', message.text);
+      this.emitter.emit('send', { ...message, user: { name: this.bot.name } });
     }
   }
 
