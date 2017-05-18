@@ -12,10 +12,9 @@ import { Permissions } from './plugins/plugins';
 import { TextMessage } from './messages';
 import { Configurable, PropTypes as T } from './configurable';
 
-
 import { Adapter } from './adapters';
 import { Plugin } from './plugins';
-import { DB } from './db';
+import DB from './db';
 
 sapp.Promise = Promise;
 
@@ -52,6 +51,7 @@ export class Exobot extends Configurable {
     enableRouter: T.bool,
     httpPrefix: T.string,
     dbPath: T.string,
+    db: T.object,
   };
 
   static defaultProps = {
@@ -160,13 +160,18 @@ export class Exobot extends Configurable {
     }
 
     try {
-      this.db = await DB({
-        key,
-        readFile,
-        writeFile,
-        path: dbPath,
-        emitter: this.emitter,
-      });
+      if (this.config.db) {
+        this.db = await this.config.db({
+          key,
+          readFile,
+          writeFile,
+          path: dbPath,
+          emitter: this.emitter,
+        });
+      } else {
+        this.log.warning('Using in-memory database only.');
+        this.db = DB();
+      }
     } catch (e) {
       throw e;
     }
@@ -434,6 +439,6 @@ export class Exobot extends Configurable {
 export * from './adapters';
 export * from './messages';
 export * from './plugins';
-export * from './db';
+export DB from './db';
 export { default as User } from './user';
 export const LogLevels = Log;

@@ -1,6 +1,6 @@
 {
   "name": "@exoplay/exobot",
-  "version": "4.3.1",
+  "version": "5.0.0-rc.2",
   "description": "a chatbox",
   "main": "exobot.js",
   "scripts": {
@@ -41,13 +41,6 @@
     "change-case": "^3.0.1",
     "cryptr": "~2.0.0",
     "eventemitter3": "^2.0.2",
-    "fs-extra": "^1.0.0",
-    "koa": "^2.0.0",
-    "koa-bodyparser": "^3.2.0",
-    "koa-compress": "^2.0.0",
-    "koa-convert": "^1.2.0",
-    "koa-methodoverride": "^2.0.0",
-    "koa-router": "^7.0.1",
     "lodash": "^4.17.3",
     "log": "^1.4.0",
     "lowdb": "^0.14.0",
