@@ -129,7 +129,7 @@ export class Exobot extends Configurable {
       let [plugin, config] = plugins[k];
 
       if (!config) {
-        this.log.warning(`Plugin "${plugin}" did not have any configuration passed in.`);
+        this.log.warning(`Plugin "${k}" did not have any configuration passed in.`);
         config = {};
       }
 
