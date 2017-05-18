@@ -84,7 +84,9 @@ export class Exobot extends Configurable {
     process.on('unhandledRejection', this.log.critical.bind(this.log));
 
     this.configure();
-    this.initialize();
+    this.initialize().then(() => (
+      this.emitter.emit('initialized')
+    ), this.log.critical);
   }
 
   configure() {
