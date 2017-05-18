@@ -38,6 +38,7 @@
   },
   "dependencies": {
     "babel-polyfill": "^6.20.0",
+    "change-case": "^3.0.1",
     "cryptr": "~2.0.0",
     "eventemitter3": "^2.0.2",
     "fs-extra": "^1.0.0",

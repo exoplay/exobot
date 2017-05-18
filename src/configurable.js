@@ -1,7 +1,6 @@
 import T from 'proptypes';
 import Log from 'log';
-
-const KEY_REGEX = /([a-z][A-Z])/g;
+import { constant } from 'change-case';
 
 export const PropTypes = T;
 
@@ -49,7 +48,7 @@ export class Configurable {
   }
 
   static processEnv(name, key, propType) {
-    const val = process.env[this.envify(name, key)];
+    const val = process.env[constant(`${name}.${key}`)];
 
     if (!val) { return; }
     if (!propType) { return val; }
@@ -99,14 +98,6 @@ export class Configurable {
     if (value === 'true') { return true; }
     if (value === !!value) { return value; }
     return value;
-  }
-
-  // turn a key like myKey into PLUGINNAME_MY_KEY
-  static envify(name, key = '') {
-    return [
-      name,
-      key.replace(KEY_REGEX, l => l.split('').join('_')),
-    ].join('_').toUpperCase();
   }
 
   get name() {
