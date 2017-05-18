@@ -66,12 +66,17 @@ export class Exobot extends Configurable {
   adapters = {};
 
   constructor(options = {}) {
-    const log = new Log(options.logLevel || Exobot.defaultProps.logLevel);
+    /* eslint no-console: 0 */
+    const logStream =
+      (typeof process === 'undefined' || !process.stdout) ?
+      { write: console.log } : process.stdout;
+
+    const log = new Log(options.logLevel || Exobot.defaultProps.logLevel, logStream);
     super(options, undefined, log);
 
     // Update logLevel if it changed during configuration parsing
     if (this.options.logLevel !== options.logLevel) {
-      this.log = new Log(this.options.logLevel);
+      this.log = new Log(this.options.logLevel, logStream);
     } else {
       this.log = log;
     }
