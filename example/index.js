@@ -8,8 +8,6 @@ const { Shell, HTTP } = adapters;
 
 const bot = new Exobot({
   plugins: {
-    shell: [Shell],
-    http: [HTTP],
     help: [Help],
     greetings: [Greetings],
     permissions: [Permissions],

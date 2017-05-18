@@ -1,6 +1,5 @@
 module.exports = {
   plugins: {
-    http: ['@exoplay/exobot', { import: 'adapters.HTTP' }],
     uptime: ['@exoplay/exobot', { import: 'plugins.Uptime' }],
     help: ['@exoplay/exobot', { import: 'plugins.Help' }],
     greetings: ['@exoplay/exobot', { import: 'plugins.Greetings' }],

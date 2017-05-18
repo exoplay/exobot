@@ -1,6 +1,6 @@
 {
   "name": "@exoplay/exobot",
-  "version": "5.0.0-rc.2",
+  "version": "5.0.0-rc.6",
   "description": "a chatbox",
   "main": "exobot.js",
   "scripts": {
@@ -37,17 +37,18 @@
     "source-map-support": "^0.4.6"
   },
   "dependencies": {
+    "@exoplay/exobot-build": "^1.0.1",
     "babel-polyfill": "^6.20.0",
     "change-case": "^3.0.1",
     "cryptr": "~2.0.0",
     "eventemitter3": "^2.0.2",
     "lodash": "^4.17.3",
+    "lodash-id": "^0.14.0",
     "log": "^1.4.0",
-    "lowdb": "^0.14.0",
+    "lowdb": "^0.16.2",
     "node-uuid": "~1.4.7",
     "proptypes": "^0.14.3",
     "superagent": "^3.3.1",
-    "superagent-promise-plugin": "~3.2.0",
-    "underscore-db": "^0.12.2"
+    "superagent-promise-plugin": "~3.2.0"
   }
 }

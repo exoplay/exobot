@@ -1,8 +1,8 @@
 import Low from 'lowdb';
-import underscoredb from 'underscore-db';
+import lodashid from 'lodash-id';
 
 export default async function DB() {
-  const db = new Low();
-  db._.mixin(underscoredb);
+  const db = new Low('db');
+  db._.mixin(lodashid);
   return db;
 }

@@ -160,8 +160,8 @@ export class Exobot extends Configurable {
     }
 
     try {
-      if (this.config.db) {
-        this.db = await this.config.db({
+      if (this.options.db) {
+        this.db = await this.options.db({
           key,
           readFile,
           writeFile,
@@ -170,7 +170,7 @@ export class Exobot extends Configurable {
         });
       } else {
         this.log.warning('Using in-memory database only.');
-        this.db = DB();
+        this.db = await DB();
       }
     } catch (e) {
       throw e;
