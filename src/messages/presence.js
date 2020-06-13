@@ -6,8 +6,10 @@ export default class PresenceMessage extends Message {
     LEAVE: 1,
   }
 
-  constructor({ type }) {
-    super(...arguments);
+  constructor(message) {
+    super(message);
+    const { type } = message;
+
     this.type = type;
   }
 }

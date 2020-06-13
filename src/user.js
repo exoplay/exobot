@@ -7,5 +7,4 @@ export default class User {
     this.roles = {};
     this.adapters = adapter || {};
   }
-
 }

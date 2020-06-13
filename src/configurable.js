@@ -1,6 +1,7 @@
+/* eslint max-classes-per-file: 0 */
 import T from 'proptypes';
 import Log from 'log';
-import { constant } from 'change-case';
+import { constantCase } from 'change-case';
 
 export const PropTypes = T;
 
@@ -21,7 +22,9 @@ export class StubLog {
 
 export class Configurable {
   static propTypes = undefined;
+
   static defaultProps = {};
+
   static type = 'Configurable';
 
   static parseConfig(name = this.type, options = {}) {
@@ -33,7 +36,7 @@ export class Configurable {
       ...this.defaultProps,
       ...(
           Object.keys(this.propTypes || {})
-            .filter(k => !optionKeys.includes(k))
+            .filter((k) => !optionKeys.includes(k))
             .reduce((c, k) => {
               // loop through any keys not passed in as properties
               const env = this.processEnv(name, k, this.propTypes[k]);
@@ -48,9 +51,9 @@ export class Configurable {
   }
 
   static processEnv(name, key, propType) {
-    const val = process.env[constant(`${name}.${key}`)];
+    const val = process.env[constantCase(`${name}.${key}`)];
 
-    if (!val) { return; }
+    if (!val) { return null; }
     if (!propType) { return val; }
 
     // Convert booleans and numbers, possibly from env vars, to the proper type
@@ -66,7 +69,7 @@ export class Configurable {
         return val;
       default:
         // it isn't a string, number, or bool. could be anything, even T.any.
-        // We'll try to parseit out as JSON, or else return whatever the value
+        // We'll try to parse it as JSON, or else return whatever the value
         // is.
         try {
           return JSON.parse(val);
@@ -96,8 +99,7 @@ export class Configurable {
   static parseBoolean(value) {
     if (value === 'false') { return false; }
     if (value === 'true') { return true; }
-    if (value === !!value) { return value; }
-    return value;
+    return !!value;
   }
 
   get name() {
@@ -144,6 +146,7 @@ export class Configurable {
 
   // this no-op provides a hook for adapters and plugins to re-initialize
   // themselves on config changes.
+  /* eslint class-methods-use-this: 0 */
   onConfigChange() {
   }
 }

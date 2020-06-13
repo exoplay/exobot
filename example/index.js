@@ -1,22 +1,29 @@
-require('babel-polyfill');
-require('source-map-support');
+const { Exobot, Adapters, Plugins } = require('../exobot');
 
-const { Exobot, adapters, plugins } = require('../exobot');
+const {
+  Help,
+  Greetings,
+  Permissions,
+  Config,
+  Uptime,
+} = Plugins;
 
-const { Help, Greetings, Permissions, Config, Uptime } = plugins;
-const { Shell, HTTP } = adapters;
+const { Shell, HTTP } = Adapters;
 
 const bot = new Exobot({
+  name: 'exobot',
+  alias: '/',
+  key: 'exobot-encryption-key',
   plugins: {
     shell: [Shell],
     http: [HTTP],
     help: [Help],
     greetings: [Greetings],
-    permissions: [Permissions],
+    permissions: [Permissions, { adminPassword: 'CHANGEME' }],
     config: [Config],
     uptime: [Uptime],
   },
-  //requirePermissions: true
+  // requirePermissions: true
 });
 
 module.exports = bot;

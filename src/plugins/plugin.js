@@ -3,6 +3,7 @@ import { TextMessage } from '../messages';
 
 export class Plugin extends Configurable {
   static propTypes = null;
+
   static defaultProps = {};
 
   get listeners() {
@@ -17,8 +18,8 @@ export class Plugin extends Configurable {
     return `${this.name}.${this[fnName].permissionGroup}`;
   }
 
-  constructor() {
-    super(...arguments);
+  constructor(options, bot, log) {
+    super(options, bot, log);
 
     if (!this.name) {
       throw new Error('This plugin has a missing `type` and/or options.name  property.');
@@ -41,8 +42,9 @@ export class Plugin extends Configurable {
     if (message.respond) {
       res = res.concat(
         this.responders
-          .map(v => this.process(...v, message))
-          .filter(r => r));
+          .map((v) => this.process(...v, message))
+          .filter((r) => r),
+);
 
       skipFns = this.responders.map(([, , name]) => name);
     }
@@ -50,8 +52,9 @@ export class Plugin extends Configurable {
     res = res.concat(
       this.listeners
         .filter(([, , name]) => !skipFns.includes(name))
-        .map(v => this.process(...v, message))
-        .filter(r => r));
+        .map((v) => this.process(...v, message))
+        .filter((r) => r),
+);
 
     return res;
   }
@@ -95,7 +98,7 @@ export class Plugin extends Configurable {
   }
 
   validateMessage(regex) {
-    return message => regex.exec(message.text);
+    return (message) => regex.exec(message.text);
   }
 
   database() {
@@ -111,14 +114,12 @@ export class Plugin extends Configurable {
   }
 
   helpText() {
-    return this.constructor.help.map(n =>
-      `[${this.permissionGroup(n)}] ${this[n].help}`,
-    );
+    return this.constructor.help.map((n) => `[${this.permissionGroup(n)}] ${this[n].help}`);
   }
 }
 
 /* eslint no-param-reassign: 0 */
-export const listen = command => (target, name, descriptor) => {
+export const listen = (command) => (target, name, descriptor) => {
   const fn = descriptor.value;
 
   if (!fn.permissionGroup) {
@@ -132,7 +133,7 @@ export const listen = command => (target, name, descriptor) => {
   target.constructor.listenFunctions.push([command, name]);
 };
 
-export const respond = command => (target, name, descriptor) => {
+export const respond = (command) => (target, name, descriptor) => {
   const fn = descriptor.value;
 
   if (!fn.permissionGroup) {
@@ -146,7 +147,7 @@ export const respond = command => (target, name, descriptor) => {
   target.constructor.respondFunctions.push([command, name]);
 };
 
-export const help = text => (target, fnName, descriptor) => {
+export const help = (text) => (target, fnName, descriptor) => {
   descriptor.value.help = text;
 
   if (!target.constructor.help) {
@@ -156,6 +157,6 @@ export const help = text => (target, fnName, descriptor) => {
   target.constructor.help.push(fnName);
 };
 
-export const permissionGroup = group => (target, fnName, descriptor) => {
+export const permissionGroup = (group) => (target, fnName, descriptor) => {
   descriptor.value.permissionGroup = group;
 };

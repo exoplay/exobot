@@ -1,11 +1,12 @@
 import { Plugin } from '../plugin';
 
-export class Node extends Plugin {
+export default class Node extends Plugin {
   static type = 'node';
+
   static propTypes = {};
 
-  constructor() {
-    super(...arguments);
+  constructor(options, bot, log) {
+    super(options, bot, log);
 
     process.on('SIGTERM', () => {
       this.bot.log.warning('SIGTERM received');

@@ -10,16 +10,16 @@ import { PropTypes as T } from '../../configurable';
 import Adapter from '../adapter';
 
 export const buildServer = () => {
-  const app = new Koa();
+  const server = new Koa();
 
-  app.use(KoaBody());
-  app.use(methodOverride());
-  app.use(compress());
+  server.use(KoaBody());
+  server.use(methodOverride());
+  server.use(compress());
 
-  return app;
+  return server;
 };
 
-export const router = opts => new KoaRouter(opts);
+export const router = (opts) => new KoaRouter(opts);
 
 export default class HttpAdapter extends Adapter {
   static type = 'HTTP';
@@ -34,13 +34,14 @@ export default class HttpAdapter extends Adapter {
     router: router(),
   };
 
-  constructor() {
-    super(...arguments);
+  constructor(options, bot, log) {
+    super(options, bot, log);
 
-    this.app = buildServer();
+    this.server = buildServer();
     this.options.router.all('*', this.receiveHTTPRequest.bind(this));
-    this.app.use(this.options.router.routes());
-    this.server = this.app.listen(this.options.port);
+    this.server.use(this.options.router.routes());
+    this.server = this.server.listen(this.options.port);
+    this.bot.log.info('HTTP server listening on', this.options.port);
 
     this.status = Adapter.STATUS.CONNECTED;
   }
@@ -90,7 +91,7 @@ export default class HttpAdapter extends Adapter {
     });
 
     const promises = this.bot.receiveMessage(message);
-    const resMessages = (await Promise.all(promises)).filter(r => r);
+    const resMessages = (await Promise.all(promises)).filter((r) => r);
 
     if (!resMessages || resMessages.length === 0) {
       ctx.status = 404;

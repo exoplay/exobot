@@ -3,20 +3,20 @@ import Low from 'lowdb';
 import fs from 'fs-extra';
 import underscoredb from 'underscore-db';
 
-export const deserialize = cryptr => (str) => {
+export const deserialize = (cryptr) => (str) => {
   if (!str) { return {}; }
   const decrypted = cryptr.decrypt(str);
   const obj = JSON.parse(decrypted);
   return obj;
 };
 
-export const serialize = cryptr => (obj) => {
+export const serialize = (cryptr) => (obj) => {
   const str = JSON.stringify(obj);
   const encrypted = cryptr.encrypt(str);
   return encrypted;
 };
 
-export const read = readFile => (path, deserializeFn) => new Promise((resolve, reject) => {
+export const read = (readFile) => (path, deserializeFn) => new Promise((resolve, reject) => {
   readFile(path).then((data) => {
     try {
       resolve(deserializeFn(data));
@@ -26,7 +26,7 @@ export const read = readFile => (path, deserializeFn) => new Promise((resolve, r
   });
 });
 
-export const write = writeFile => (path, obj, serializeFn) => new Promise((resolve, reject) => {
+export const write = (writeFile) => (path, obj, serializeFn) => new Promise((resolve, reject) => {
   try {
     const data = serializeFn(obj);
     writeFile(path, data).then(resolve, reject);
@@ -35,7 +35,7 @@ export const write = writeFile => (path, obj, serializeFn) => new Promise((resol
   }
 });
 
-export const readLocal = path => new Promise((resolve, reject) => (
+export const readLocal = (path) => new Promise((resolve, reject) => (
   /* eslint no-shadow: 0 */
   fs.ensureFile(path, (err) => {
     if (err) { return reject(err); }
@@ -57,7 +57,9 @@ export const writeLocal = (path, data) => new Promise((resolve, reject) => (
   })
 ));
 
-export async function DB({ path, key, readFile = readLocal, writeFile = writeLocal, name }) {
+export async function DB({
+ path, key, readFile = readLocal, writeFile = writeLocal, name,
+}) {
   const cryptr = new Cryptr(key || name);
   const dbPath = path || `./data/${name}.json`;
 

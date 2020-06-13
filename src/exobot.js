@@ -1,4 +1,5 @@
 /* globals __non_webpack_require__ */
+// TODO get rid of regeneratorRuntime requirement via env settings
 
 import Emitter from 'eventemitter3';
 import Log from 'log';
@@ -8,26 +9,20 @@ import { intersection } from 'lodash/array';
 import { get, set } from 'lodash/object';
 import { merge, cloneDeep } from 'lodash';
 
-import { Permissions } from './plugins/plugins';
 import { TextMessage } from './messages';
 import { Configurable, PropTypes as T } from './configurable';
 
-
 import { Adapter } from './adapters';
-import { Plugin } from './plugins';
+import { Plugin, Plugins } from './plugins';
 import { DB } from './db';
+
+export { AdapterOperationTypes } from './adapters/adapter';
 
 sapp.Promise = Promise;
 
 export const PropTypes = T;
-export const AdapterOperationTypes = {
-  DISCIPLINE_USER_WARNING: 'AO_discipline_user_warning',
-  DISCIPLINE_USER_TEMPORARY: 'AO_discipline_user_temporary',
-  DISCIPLINE_USER_PERMANENT: 'AO_discipline_user_permanent',
-  WHISPER_USER: 'AO_whisper_user',
-  PROMPT_USER: 'AO_prompt_user',
-};
 
+const { Permissions } = Plugins;
 const http = sapp.patch(superagent);
 const USERS_DB = 'exobot-users';
 const CONFIG_DB = 'exobot-configuration';
@@ -63,15 +58,16 @@ export class Exobot extends Configurable {
   };
 
   plugins = {}
+
   adapters = {};
 
   constructor(options = {}) {
     /* eslint no-console: 0 */
-    const logStream =
-      (typeof process === 'undefined' || !process.stdout) ?
-      { write: console.log } : process.stdout;
+    const logStream = (typeof process === 'undefined' || !process.stdout)
+      ? { write: console.log } : process.stdout;
 
     const log = new Log(options.logLevel || Exobot.defaultProps.logLevel, logStream);
+
     super(options, undefined, log);
 
     // Update logLevel if it changed during configuration parsing
@@ -90,8 +86,7 @@ export class Exobot extends Configurable {
   }
 
   configure() {
-    this.botNameRegex =
-      new RegExp(`^(?:(?:@?${this.options.name}|${this.options.alias})[,\\s:.-]*)(.+)`, 'i');
+    this.botNameRegex = new RegExp(`^(?:(?:@?${this.options.name}|${this.options.alias})[,\\s:.-]*)(.+)`, 'i');
 
     this.emitter = new Emitter();
     this.http = http;
@@ -113,8 +108,8 @@ export class Exobot extends Configurable {
 
   async shutdown() {
     await Promise.all([
-      ...Object.keys(this.adapters).map(k => this.adapters[k].shutdown()),
-      ...Object.keys(this.plugins).map(k => this.plugins[k].shutdown()),
+      ...Object.keys(this.adapters).map((k) => this.adapters[k].shutdown()),
+      ...Object.keys(this.plugins).map((k) => this.plugins[k].shutdown()),
       this.db.write(),
     ]);
   }
@@ -129,7 +124,7 @@ export class Exobot extends Configurable {
       let [plugin, config] = plugins[k];
 
       if (!config) {
-        this.log.warning(`Plugin "${k}" did not have any configuration passed in.`);
+        this.log.notice(`Plugin "${k}" did not have any configuration passed in.`);
         config = {};
       }
 
@@ -151,7 +146,7 @@ export class Exobot extends Configurable {
       return p;
     }, {});
 
-    Object.keys(loadedPlugins).forEach(k => this.addPlugin(k, ...loadedPlugins[k]));
+    Object.keys(loadedPlugins).forEach((k) => this.addPlugin(k, ...loadedPlugins[k]));
   }
 
   async initDB(key, dbPath, readFile, writeFile) {
@@ -159,17 +154,13 @@ export class Exobot extends Configurable {
       throw new Error('Pass options.key in to bot initializer. Database not initializing.');
     }
 
-    try {
-      this.db = await DB({
-        key,
-        readFile,
-        writeFile,
-        path: dbPath,
-        emitter: this.emitter,
-      });
-    } catch (e) {
-      throw e;
-    }
+    this.db = await DB({
+      key,
+      readFile,
+      writeFile,
+      path: dbPath,
+      emitter: this.emitter,
+    });
   }
 
   initUsers() {
@@ -248,10 +239,10 @@ export class Exobot extends Configurable {
     this.db.write();
   }
 
-  getRoles = userId => Object.keys(this.users.botUsers[userId].roles)
+  getRoles = (userId) => Object.keys(this.users.botUsers[userId].roles)
 
   removeRole = (userId, roleName) => {
-    const roles = this.users.botUsers[userId].roles;
+    const { roles } = this.users.botUsers[userId];
     delete roles[roleName];
     this.db.write();
   }
@@ -314,7 +305,7 @@ export class Exobot extends Configurable {
     const lowerName = name.toLowerCase();
 
     return Object.keys(this.users.botUsers)
-                   .find(id => this.users.botUsers[id].name.toLowerCase() === lowerName);
+                   .find((id) => this.users.botUsers[id].name.toLowerCase() === lowerName);
   }
 
   addPlugin(name, PluginClass, opts) {
@@ -399,11 +390,11 @@ export class Exobot extends Configurable {
 
   getByName = (name, list) => list[name]
 
-  getPluginByName = name => this.getByName(name, this.plugins)
+  getPluginByName = (name) => this.getByName(name, this.plugins)
 
-  getAdapterByName = name => this.getByName(name, this.adapters)
+  getAdapterByName = (name) => this.getByName(name, this.adapters)
 
-  getAdapterByMessage = message => this.getByName(message.adapter, this.adapters)
+  getAdapterByMessage = (message) => this.getByName(message.adapter, this.adapters)
 
   receiveMessage(message) {
     if (!message.text) { return; }

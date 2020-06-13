@@ -1,7 +1,14 @@
 import { Configurable } from '../configurable';
-import { AdapterOperationTypes as AO } from '../exobot';
 import PresenceMessage from '../messages/presence';
 import User from '../user';
+
+export const AdapterOperationTypes = {
+  DISCIPLINE_USER_WARNING: 'AdapterOperationTypes_discipline_user_warning',
+  DISCIPLINE_USER_TEMPORARY: 'AdapterOperationTypes_discipline_user_temporary',
+  DISCIPLINE_USER_PERMANENT: 'AdapterOperationTypes_discipline_user_permanent',
+  WHISPER_USER: 'AdapterOperationTypes_whisper_user',
+  PROMPT_USER: 'AdapterOperationTypes_prompt_user',
+};
 
 export default class Adapter extends Configurable {
   static STATUS = {
@@ -20,7 +27,7 @@ export default class Adapter extends Configurable {
   status = Adapter.STATUS.UNINITIALIZED;
 
   constructor(options, bot) {
-    super(...arguments);
+    super(options, bot);
 
     if (!bot) { throw new Error('No bot passed to register; fatal.'); }
 
@@ -31,14 +38,16 @@ export default class Adapter extends Configurable {
     this.bot = bot;
     this.initUsers();
     this.prompts = {};
-    this.bot.emitter.on(AO.PROMPT_USER, this.promptUser);
+    this.bot.emitter.on(AdapterOperationTypes.PROMPT_USER, this.promptUser);
     this.status = Adapter.STATUS.CONNECTING;
   }
 
   /* eslint no-empty-function: 0 */
   async shutdown() { }
 
-  receive({ user, text, channel, whisper }) {
+  receive({
+ user, text, channel, whisper,
+}) {
     if (!text) {
       this.bot.log.info('Message received with undefined text.');
       return;
@@ -62,13 +71,17 @@ export default class Adapter extends Configurable {
     }
     if (this.prompts[user.id]) {
       this.prompts[user.id].forEach((val, index) => {
-        if (val.cb(val.data, { user, text, channel, adapter: this.name })) {
+        if (val.cb(val.data, {
+ user, text, channel, adapter: this.name,
+})) {
           delete this.prompts[user.id][index];
         }
       });
     }
 
-    this.receive({ user, text, channel, whisper: true });
+    this.receive({
+ user, text, channel, whisper: true,
+});
   }
 
   enter({ user, channel }) {
@@ -186,7 +199,7 @@ export default class Adapter extends Configurable {
 
   promptUser = (adapterName, data, cb) => {
     if (this.name === adapterName) {
-      this.bot.emitter.emit(AO.WHISPER_USER, this.name, data);
+      this.bot.emitter.emit(AdapterOperationTypes.WHISPER_USER, this.name, data);
       if (this.prompts[data.userId]) {
         this.prompts[data.userId].push({ data, cb });
       } else {
@@ -194,5 +207,4 @@ export default class Adapter extends Configurable {
       }
     }
   }
-
 }

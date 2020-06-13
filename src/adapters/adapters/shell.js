@@ -1,7 +1,6 @@
 import readline from 'readline';
-import { AdapterOperationTypes as AT } from '../../exobot';
+import Adapter, { AdapterOperationTypes as AT } from '../adapter';
 import { PropTypes as T } from '../../configurable';
-import Adapter from '../adapter';
 
 const SHELL = 'SHELL';
 
@@ -22,8 +21,8 @@ export default class ShellAdapter extends Adapter {
     userName: 'shell',
   };
 
-  constructor() {
-    super(...arguments);
+  constructor(options, bot, log) {
+    super(options, bot, log);
 
     this.rl = readline.createInterface({
       input: process.stdin,
@@ -61,7 +60,6 @@ export default class ShellAdapter extends Adapter {
           whisper: false,
         });
       }
-
 
       this.prompt();
     });

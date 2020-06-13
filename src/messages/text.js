@@ -1,8 +1,12 @@
 import Message from './message';
 
 export default class TextMessage extends Message {
-  constructor({ text, whisper = false, respond = false, params = {} }) {
-    super(...arguments);
+  constructor(message) {
+    super(message);
+
+    const {
+      text, whisper = false, respond = false, params = {},
+    } = message;
 
     if (text) {
       this.text = text.trim();

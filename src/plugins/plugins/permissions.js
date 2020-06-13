@@ -1,13 +1,16 @@
 import { v4 as uuid } from 'node-uuid';
-import { AdapterOperationTypes as AO } from '../../exobot';
-import { Plugin, respond, help, permissionGroup } from '../plugin';
+import { AdapterOperationTypes as AO } from '../../adapters/adapter';
+import {
+ Plugin, respond, help, permissionGroup,
+} from '../plugin';
 import { PropTypes as T } from '../../configurable';
 import User from '../../user';
 
 /* eslint no-param-reassign: 0 */
 
-export class Permissions extends Plugin {
+export default class Permissions extends Plugin {
   static type = 'permissions';
+
   static defaultDatabase = { permissions: {} };
 
   static propTypes = {
@@ -37,9 +40,9 @@ export class Permissions extends Plugin {
     return false;
   }
 
-  @help('/permissions authorize admin <password> to authorize yourself as an admin');
-  @permissionGroup('public');
-  @respond(/^permissions authorize admin (.+)$/i);
+  @help('/permissions authorize admin <password> to authorize yourself as an admin')
+  @permissionGroup('public')
+  @respond(/^permissions authorize admin (.+)$/i)
   admin([, adminPassword], message) {
     // Validate the password - if there is one.
     if (this.options.adminPassword && adminPassword === this.options.adminPassword) {
@@ -49,8 +52,8 @@ export class Permissions extends Plugin {
         this.bot.emitter.emit(AO.PROMPT_USER, message.adapter, {
           type: 'PasswordReset',
           userId: message.user.id,
-          messageText: 'Admin password invalidated due to public channel use of login command. ' +
-          'Please respond by typing a new admin password.',
+          messageText: 'Admin password invalidated due to public channel use of login command. '
+          + 'Please respond by typing a new admin password.',
         }, this.setAdminPassword);
       }
 
@@ -59,10 +62,10 @@ export class Permissions extends Plugin {
     }
   }
 
-  @help('/permissions add role <role> to <user> to add a role to a user');
-  @permissionGroup('role-management');
-  @respond(/^permissions add role (\w+) to (.+)$/i);
-  async addRoleToUser([match, role, name], message) {
+  @help('/permissions add role <role> to <user> to add a role to a user')
+  @permissionGroup('role-management')
+  @respond(/^permissions add role (\w+) to (.+)$/i)
+  async addRoleToUser([, role, name], message) {
     role = this.constructor.nameToId(role);
     let userIdDirty;
 
@@ -80,10 +83,10 @@ export class Permissions extends Plugin {
     }
   }
 
-  @help('/permissions view user <user> to view roles given to a user');
-  @permissionGroup('role-management');
-  @respond(/^permissions view user (.+)$/i);
-  async viewUser([match, name], message) {
+  @help('/permissions view user <user> to view roles given to a user')
+  @permissionGroup('role-management')
+  @respond(/^permissions view user (.+)$/i)
+  async viewUser([, name], message) {
     let userIdDirty;
 
     try {
@@ -100,10 +103,10 @@ export class Permissions extends Plugin {
     }
   }
 
-  @help('/permissions view effective user <user> to view all roles assigned to <user>');
-  @permissionGroup('role-management');
-  @respond(/^permissions view effective user (.+)$/i);
-  async viewEffectiveUser([match, name], message) {
+  @help('/permissions view effective user <user> to view all roles assigned to <user>')
+  @permissionGroup('role-management')
+  @respond(/^permissions view effective user (.+)$/i)
+  async viewEffectiveUser([, name], message) {
     let userIdDirty;
 
     try {
@@ -120,10 +123,10 @@ export class Permissions extends Plugin {
     }
   }
 
-  @help('/permissions remove role <role> from <user> to remove a role from a user');
-  @permissionGroup('role-management');
-  @respond(/^permissions remove role (\S+) from (.+)$/i);
-  async removeRoleFromUser([match, role, name], message) {
+  @help('/permissions remove role <role> from <user> to remove a role from a user')
+  @permissionGroup('role-management')
+  @respond(/^permissions remove role (\S+) from (.+)$/i)
+  async removeRoleFromUser([, role, name], message) {
     role = this.constructor.nameToId(role);
     let userIdDirty;
 
@@ -141,10 +144,10 @@ export class Permissions extends Plugin {
     }
   }
 
-  @help('/permissions add role <permissiongroup> <role> to allow access to a permissionGroup');
-  @permissionGroup('role-management');
-  @respond(/^permissions add role (\S+) (\S+)$/i);
-  addRoleToGroup([, group, role]/* , message*/) {
+  @help('/permissions add role <permissiongroup> <role> to allow access to a permissionGroup')
+  @permissionGroup('role-management')
+  @respond(/^permissions add role (\S+) (\S+)$/i)
+  addRoleToGroup([, group, role]/* , message */) {
     role = this.constructor.nameToId(role);
 
     this.bot.db.set(`permissions.groups.${group}.${role}`, true).value();
@@ -152,10 +155,10 @@ export class Permissions extends Plugin {
     return `role "${role}" given permission to commands under group "${group}".`;
   }
 
-  @help('/permissions remove group <permissionGroup> <role> to allow access to a permissionGroup');
-  @permissionGroup('role-management');
-  @respond(/^permissions remove role (\S+) (\S+)$/i);
-  removeRoleFromGroup([, group, role]/* , message*/) {
+  @help('/permissions remove group <permissionGroup> <role> to allow access to a permissionGroup')
+  @permissionGroup('role-management')
+  @respond(/^permissions remove role (\S+) (\S+)$/i)
+  removeRoleFromGroup([, group, role]/* , message */) {
     role = this.constructor.nameToId(role);
 
     const dbGroup = this.bot.db.get(`permissions.groups.${group}`).value();
@@ -166,12 +169,12 @@ export class Permissions extends Plugin {
   }
 
   @help(
-    '/permissions view group <permissionGroup> to view roles with access to ' +
-    'commands under that permissionGroup',
-  );
-  @permissionGroup('role-management');
-  @respond(/^permissions view group (\S+)$/i);
-  viewGroup([, group]/* , message*/) {
+    '/permissions view group <permissionGroup> to view roles with access to '
+    + 'commands under that permissionGroup',
+  )
+  @permissionGroup('role-management')
+  @respond(/^permissions view group (\S+)$/i)
+  viewGroup([, group]/* , message */) {
     const dbGroup = this.bot.db.get(`permissions.groups.${group}`).value();
 
     if (dbGroup) {
@@ -182,10 +185,10 @@ export class Permissions extends Plugin {
     return `No permissions assigned to ${group}.`;
   }
 
-  @help('/login to recieve a token to claim your users across chat adapters, ' +
-    '/login <userIdString> <userToken> to login on another adapter');
-  @permissionGroup('public');
-  @respond(/^login\s*(\S+)?\s*(\S+)?$/i);
+  @help('/login to recieve a token to claim your users across chat adapters, '
+    + '/login <userIdString> <userToken> to login on another adapter')
+  @permissionGroup('public')
+  @respond(/^login\s*(\S+)?\s*(\S+)?$/i)
   multipleAdapterLogin([, userId, token], message) {
     if (userId && token) {
       const user = this.bot.getUser(userId);
@@ -201,13 +204,13 @@ export class Permissions extends Plugin {
 
     token = uuid();
     this.bot.setUserData(message.user.id, 'token', token);
-    return 'Please whisper this to the bot on the other adapter \n' +
-            `login ${message.user.id} ${token}`;
+    return 'Please whisper this to the bot on the other adapter \n'
+            + `login ${message.user.id} ${token}`;
   }
 
-  @help('/webhook new <name> to create a webhook user to access webhook commands');
-  @permissionGroup('role-management');
-  @respond(/^webhook new (\S+)$/i);
+  @help('/webhook new <name> to create a webhook user to access webhook commands')
+  @permissionGroup('role-management')
+  @respond(/^webhook new (\S+)$/i)
   newWebhookUser([, name]) {
     const user = new User();
     user.name = `webhook-${name}`;
@@ -215,13 +218,13 @@ export class Permissions extends Plugin {
     user.isWebhook = true;
     this.bot.addUser(user);
 
-    return `Set up your webhook with id=${user.id} & token=${user.token} after giving it ` +
-           `permissions with \`/webhook add role ${user.name} <role>\``;
+    return `Set up your webhook with id=${user.id} & token=${user.token} after giving it `
+           + `permissions with \`/webhook add role ${user.name} <role>\``;
   }
 
-  @help('/webhook add role <webhook name> <role> to add a role to a webhook');
-  @permissionGroup('role-management');
-  @respond(/^webhook add role (\S+) (\S+)$/i);
+  @help('/webhook add role <webhook name> <role> to add a role to a webhook')
+  @permissionGroup('role-management')
+  @respond(/^webhook add role (\S+) (\S+)$/i)
   addWebhookRole([, name, role]) {
     role = this.constructor.nameToId(role);
     let userIdDirty;
@@ -240,9 +243,9 @@ export class Permissions extends Plugin {
     }
   }
 
-  @help('/webhook remove role <webhook name> <role> to remove a role to a webhook');
-  @permissionGroup('role-management');
-  @respond(/^webhook remove role (\S+) (\S+)$/i);
+  @help('/webhook remove role <webhook name> <role> to remove a role to a webhook')
+  @permissionGroup('role-management')
+  @respond(/^webhook remove role (\S+) (\S+)$/i)
   removeWebhookRole([, name, role]) {
     role = this.constructor.nameToId(role);
     let userIdDirty;
@@ -261,9 +264,9 @@ export class Permissions extends Plugin {
     }
   }
 
-  @help('/webhook view <name> to view a webhook\'s roles');
-  @permissionGroup('role-management');
-  @respond(/^webhook view (\S+)?$/i);
+  @help('/webhook view <name> to view a webhook\'s roles')
+  @permissionGroup('role-management')
+  @respond(/^webhook view (\S+)?$/i)
   viewWebHook([, name]) {
     let userIdDirty;
 
@@ -281,9 +284,9 @@ export class Permissions extends Plugin {
     }
   }
 
-  @help('/webhook delete <name> to delete a webhook');
-  @permissionGroup('role-management');
-  @respond(/^webhook delete (\S+)$/i);
+  @help('/webhook delete <name> to delete a webhook')
+  @permissionGroup('role-management')
+  @respond(/^webhook delete (\S+)$/i)
   deleteWebHook([, name]) {
     let userIdDirty;
 
@@ -304,9 +307,9 @@ export class Permissions extends Plugin {
     return `Webhook ${name} not found.`;
   }
 
-  @help('/webhook regenerate <name> to regenerate a webhook\'s token');
-  @permissionGroup('role-management');
-  @respond(/^webhook regenerate (\S+)$/i);
+  @help('/webhook regenerate <name> to regenerate a webhook\'s token')
+  @permissionGroup('role-management')
+  @respond(/^webhook regenerate (\S+)$/i)
   regenerateWebHook([, name]) {
     let userIdDirty;
 

@@ -15,7 +15,7 @@ To start an exobot instance, you need to import the bot itself and initialize it
 with plugins and chat service adapters. Here's an example:
 
 ```javascript
-import { Exobot, adapters, plugins, LogLevels } from '@exoplay/exobot';
+import { Exobot, Adapters, Plugins, LogLevels } from '@exoplay/exobot';
 import { Points } from '@exoplay/exobot-plugin-points';
 
 const { Help, Greetings } = plugins;
@@ -174,7 +174,7 @@ class StatusPlugin extends ChatPlugin {
   //...
 
   @help('Gets the status of the configured endpoint.');
-  @permissionGroup('get');
+  @permissionGroup('status');
   @respond(m => m.text === 'status');
   async getStatus () {
     const res = await this.http.get(this.endpoint);

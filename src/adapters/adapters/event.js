@@ -1,7 +1,6 @@
 import EventEmitter from 'events';
-import { AdapterOperationTypes as AT } from '../../exobot';
 import { PropTypes as T } from '../../configurable';
-import Adapter from '../adapter';
+import Adapter, { AdapterOperationTypes as AT } from '../adapter';
 
 export default class EventAdapter extends Adapter {
   static type = 'Event';
@@ -15,8 +14,8 @@ export default class EventAdapter extends Adapter {
     channel: 'event',
   };
 
-  constructor() {
-    super(...arguments);
+  constructor(options, bot, log) {
+    super(options, bot, log);
     this.bot.emitter.on(AT.WHISPER_USER, this.whisperUser, this);
     this.emitter = new EventEmitter();
     this.emitter.on('message', this.message.bind(this));
